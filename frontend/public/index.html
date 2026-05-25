@@ -15,6 +15,7 @@
 }
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
 
+/* Header */
 .hdr{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:50px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
 .hdr-l{display:flex;align-items:center;gap:10px;}
 .logo{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:15px;}
@@ -24,7 +25,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .stat{text-align:right;}
 .stat-v{font-size:13px;font-weight:600;color:var(--cyan);font-family:'JetBrains Mono',monospace;}
 .stat-l{font-size:10px;color:var(--t3);}
-.hdr-btns{display:flex;gap:6px;}
+.hdr-btns{display:flex;gap:6px;align-items:center;}
 .btn{padding:5px 11px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--t2);font-family:'Noto Sans KR',sans-serif;transition:all .15s;}
 .btn:hover{border-color:var(--blue);color:var(--blue);}
 .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue);}
@@ -32,14 +33,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .btn.danger{border-color:rgba(239,68,68,.4);color:var(--red);}
 .btn.danger:hover{background:rgba(239,68,68,.1);}
 
+/* Main layout */
 .main{display:flex;flex:1;overflow:hidden;}
 .map-wrap{width:60%;position:relative;background:#1a2332;flex-shrink:0;}
 #map{width:100%;height:100%;}
-
-.map-tb{position:absolute;top:10px;left:10px;display:flex;flex-direction:column;gap:5px;z-index:50;}
-.mbt{width:34px;height:34px;border-radius:7px;background:rgba(15,23,42,.92);border:1px solid var(--border);color:var(--t2);font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;backdrop-filter:blur(8px);}
-.mbt:hover{border-color:var(--blue);color:var(--blue);}
-.mbt.on{background:var(--blue);color:#fff;border-color:var(--blue);}
 
 /* 로딩 오버레이 */
 .overlay{position:absolute;inset:0;background:rgba(10,14,26,.88);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px);}
@@ -47,10 +44,14 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .ov-box{background:var(--card);border:1px solid var(--borderB);border-radius:12px;padding:24px 32px;text-align:center;min-width:260px;}
 .ov-title{font-size:14px;font-weight:600;margin-bottom:12px;}
 .ov-bar-wrap{background:var(--panel);border-radius:4px;height:6px;overflow:hidden;margin-bottom:10px;}
-.ov-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:4px;transition:width .4s;width:0%;}
+.ov-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:4px;transition:width .3s;width:0%;}
 .ov-msg{font-size:12px;color:var(--t2);}
 
-.legend{position:absolute;bottom:14px;left:10px;background:rgba(15,23,42,.92);border:1px solid var(--border);border-radius:10px;padding:10px 13px;backdrop-filter:blur(8px);z-index:50;min-width:155px;max-height:300px;overflow-y:auto;}
+/* 줌 레벨 표시 */
+.zoom-badge{position:absolute;bottom:50px;left:10px;background:rgba(15,23,42,.92);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--t2);z-index:50;font-family:'JetBrains Mono',monospace;backdrop-filter:blur(8px);}
+
+/* 범례 */
+.legend{position:absolute;bottom:80px;left:10px;background:rgba(15,23,42,.92);border:1px solid var(--border);border-radius:10px;padding:10px 13px;backdrop-filter:blur(8px);z-index:50;min-width:160px;max-height:260px;overflow-y:auto;}
 .legend::-webkit-scrollbar{width:3px;}
 .legend::-webkit-scrollbar-thumb{background:var(--border);}
 .leg-title{font-size:10px;color:var(--t3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px;}
@@ -58,6 +59,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .leg-item.off .leg-dot,.leg-item.off span{opacity:.3;}
 
+/* 객체 정보 팝업 */
 .info-pop{position:absolute;top:10px;right:10px;background:rgba(15,23,42,.96);border:1px solid var(--borderB);border-radius:10px;padding:12px 15px;z-index:50;min-width:210px;max-width:250px;display:none;backdrop-filter:blur(8px);}
 .info-pop.show{display:block;}
 .info-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
@@ -70,29 +72,27 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .ai-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:var(--cyan);margin-top:8px;font-family:'Noto Sans KR',sans-serif;transition:all .15s;}
 .ai-btn:hover{background:rgba(6,182,212,.25);}
 
+/* 분할선 */
 .dvd{width:3px;background:var(--border);cursor:col-resize;flex-shrink:0;transition:background .15s;}
 .dvd:hover{background:var(--blue);}
 
+/* 채팅 패널 */
 .chat{flex:1;display:flex;flex-direction:column;background:var(--bg2);overflow:hidden;}
 .chat-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
 .chat-ttl{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
 .badge{font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3);font-family:'JetBrains Mono',monospace;}
-
 .srv-bar{padding:6px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--panel);flex-shrink:0;font-size:11px;color:var(--t3);}
-
 .ctx-bar{padding:5px 12px;border-bottom:1px solid var(--border);background:rgba(59,130,246,.05);flex-shrink:0;display:none;align-items:center;gap:7px;}
 .ctx-bar.show{display:flex;}
 .ctx-lbl{font-size:11px;color:var(--blue);}
 .ctx-txt{font-size:11px;color:var(--t2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .ctx-x{font-size:11px;color:var(--t3);cursor:pointer;}
 .ctx-x:hover{color:var(--red);}
-
 .quick{padding:7px 12px;border-bottom:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;}
 .qbtn{padding:3px 9px;border-radius:16px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--t2);font-family:'Noto Sans KR',sans-serif;transition:all .15s;white-space:nowrap;}
 .qbtn:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.08);}
-
 .msgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px;}
 .msgs::-webkit-scrollbar{width:3px;}
 .msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
@@ -111,7 +111,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .td{width:7px;height:7px;border-radius:50%;background:var(--blue);opacity:.6;animation:ty 1.2s infinite;}
 .td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
 @keyframes ty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px);opacity:1}}
-
 .inp-area{padding:10px 12px;border-top:1px solid var(--border);background:var(--panel);flex-shrink:0;}
 .inp-wrap{display:flex;background:var(--card);border:1px solid var(--border);border-radius:9px;overflow:hidden;transition:border-color .15s;}
 .inp-wrap:focus-within{border-color:var(--blue);}
@@ -123,8 +122,10 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 .inp-ft{display:flex;justify-content:space-between;margin-top:5px;padding:0 2px;}
 .inp-hint{font-size:10px;color:var(--t3);}
 .finfo{font-size:10px;color:var(--cyan);}
-
 .toast{position:fixed;bottom:18px;right:18px;z-index:9999;background:rgba(15,23,42,.95);border-radius:8px;padding:9px 14px;font-size:12px;color:var(--t1);font-family:'Noto Sans KR',sans-serif;max-width:300px;backdrop-filter:blur(8px);animation:fi .2s ease;}
+
+/* 카카오 클러스터 스타일 오버라이드 */
+.cluster-marker{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;cursor:pointer;border:2px solid rgba(255,255,255,.4);}
 </style>
 </head>
 <body>
@@ -139,13 +140,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
   </div>
   <div class="hdr-stats">
     <div class="stat"><div class="stat-v" id="s-total">0</div><div class="stat-l">총 객체</div></div>
-    <div class="stat"><div class="stat-v" id="s-vis">0</div><div class="stat-l">지도 표시</div></div>
-    <div class="stat"><div class="stat-v" id="s-layers">-</div><div class="stat-l">레이어</div></div>
+    <div class="stat"><div class="stat-v" id="s-vis">0</div><div class="stat-l">화면 표시</div></div>
+    <div class="stat"><div class="stat-v" id="s-zoom">-</div><div class="stat-l">줌 레벨</div></div>
   </div>
   <div class="hdr-btns">
     <button class="btn pri" onclick="triggerUpload()">📂 GeoJSON 업로드</button>
     <button class="btn danger" onclick="resetAll()">🔄 초기화</button>
-    <button class="btn" onclick="exportChat()">📊 분석 내보내기</button>
+    <button class="btn" onclick="exportChat()">📊 내보내기</button>
   </div>
 </div>
 
@@ -155,7 +156,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
   <div class="map-wrap" id="map-wrap">
     <div id="map"></div>
 
-    <!-- 로딩 오버레이 -->
     <div class="overlay" id="overlay">
       <div class="ov-box">
         <div class="ov-title" id="ov-title">데이터 로딩 중...</div>
@@ -164,21 +164,13 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       </div>
     </div>
 
-    <!-- 툴바 -->
-    <div class="map-tb">
-      <button class="mbt on" id="tb-point" title="포인트 레이어" onclick="toggleGeoType('point',this)">📍</button>
-      <button class="mbt on" id="tb-line"  title="선형 레이어"   onclick="toggleGeoType('line',this)">〰️</button>
-      <button class="mbt on" id="tb-poly"  title="폴리곤 레이어" onclick="toggleGeoType('poly',this)">⬡</button>
-      <button class="mbt" title="전체 보기" onclick="fitAll()">⊡</button>
-    </div>
+    <div class="zoom-badge" id="zoom-badge">줌: -</div>
 
-    <!-- 범례 -->
     <div class="legend">
       <div class="leg-title">레이어</div>
       <div id="legend-items"><div style="font-size:11px;color:var(--t3)">GeoJSON 업로드 후 표시</div></div>
     </div>
 
-    <!-- 객체 정보 팝업 -->
     <div class="info-pop" id="info-pop">
       <div class="info-hdr">
         <span class="info-ttl" id="info-ttl">객체 정보</span>
@@ -196,18 +188,15 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       <div class="chat-ttl"><div class="dot"></div>AI 도로 분석</div>
       <span class="badge">claude-sonnet-4</span>
     </div>
-
     <div class="srv-bar">
       <span>🔒 API Key 서버 보관</span>
       <span id="srv-status" style="color:var(--amber)">확인 중...</span>
     </div>
-
     <div class="ctx-bar" id="ctx-bar">
       <span class="ctx-lbl">📍</span>
       <span class="ctx-txt" id="ctx-txt"></span>
       <span class="ctx-x" onclick="clearCtx()">✕</span>
     </div>
-
     <div class="quick">
       <button class="qbtn" onclick="sq('업로드한 도로 데이터의 시설물 종류와 분포 특성을 분석해주세요')">📋 전체 현황</button>
       <button class="qbtn" onclick="sq('VMS와 DSRC 위치를 분석하고 C-ITS 관점에서 해석해주세요')">📡 C-ITS</button>
@@ -215,22 +204,20 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       <button class="qbtn" onclick="sq('CCTV와 가로등 분포로 야간 도로 안전성을 평가해주세요')">🌙 야간 안전</button>
       <button class="qbtn" onclick="sq('이 도로 구간의 시설물 현황을 종합 요약해주세요')">📊 종합 요약</button>
     </div>
-
     <div class="msgs" id="msgs">
       <div class="msg assistant">
         <div class="av">🤖</div>
         <div class="mc">
           안녕하세요! <strong>정밀도로지도 AI 분석 시스템</strong>입니다.<br><br>
           <strong>사용 순서:</strong><br>
-          1️⃣ Python 스크립트로 TTL → GeoJSON 변환<br>
-          <code>python convert_ttl.py input.ttl output.geojson</code><br><br>
-          2️⃣ 상단 <strong>📂 GeoJSON 업로드</strong> 버튼으로 파일 업로드<br><br>
-          3️⃣ 지도에서 객체 클릭 → AI 분석 요청<br><br>
-          초기화가 필요하면 <strong>🔄 초기화</strong> 버튼을 사용하세요.
+          1️⃣ 코랩에서 TTL → GeoJSON 변환<br>
+          2️⃣ <strong>📂 GeoJSON 업로드</strong> 버튼으로 파일 업로드<br>
+          3️⃣ 지도 줌인/아웃으로 데이터 탐색<br>
+          4️⃣ 객체 클릭 → AI 분석 요청<br><br>
+          <strong>줌 레벨에 따라 자동으로 클러스터 ↔ 개별 마커가 전환됩니다.</strong>
         </div>
       </div>
     </div>
-
     <div class="inp-area">
       <div class="inp-wrap">
         <textarea id="cinput" placeholder="도로 데이터에 대해 질문하세요... (Enter 전송)" rows="1"
@@ -246,42 +233,107 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 </div>
 
 <script>
-// ═══════════════════════════════════════════════
-// 상태
-// ═══════════════════════════════════════════════
-let map;
-let allFeatures = [];
-let layerMap   = {};   // label → [{obj, geoType}]
-let layerVis   = {};   // label → bool
-let dataStats  = {};
-let selectedF  = null;
+'use strict';
+
+// ═══════════════════════════════════════════════════════════
+// 전역 상태
+// ═══════════════════════════════════════════════════════════
+let map = null;
+let allFeatures = [];      // 전체 GeoJSON features (메모리에만, 지도 객체 아님)
+let dataStats = {};
+let selectedF = null;
 let chatHistory = [];
 let currentCtx = null;
 
+// 지도 객체 관리
+let clusterer = null;      // 카카오 클러스터러
+let visibleMarkers = [];   // 현재 지도에 올라간 마커
+let visiblePolylines = []; // 현재 지도에 올라간 폴리라인
+let visiblePolygons = [];  // 현재 지도에 올라간 폴리곤
+let markerCache = {};      // color → MarkerImage 캐시
+
+// 레이어 가시성 (label 단위)
+let layerVis = {};         // label → bool (기본 true)
+
+// 줌 레벨 임계값
+// 줌 9 이상(멀리): 클러스터만
+// 줌 8 이하(가까이): 현재 뷰포트 안 개별 마커 + 선/면
+const CLUSTER_ZOOM = 9;
+const MAX_VIEWPORT_MARKERS = 2000; // 뷰포트 내 최대 마커 수
+
+// 클래스별 색상
 const CLASS_COLOR = {
   Class_001:'#3b82f6', Class_002:'#8b5cf6', Class_010:'#f59e0b',
   Class_021:'#f59e0b', Class_022:'#10b981', Class_037:'#f97316',
   Class_038:'#fbbf24', Class_044:'#ef4444', Class_046:'#06b6d4',
   Class_047:'#84cc16', Class_061:'#ec4899', Class_062:'#a78bfa',
-  Class_063:'#84cc16',
+  Class_063:'#84cc16', Class_025:'#fb923c', Class_024:'#fb923c',
 };
 const DEF_COLOR = '#94a3b8';
 const getColor = cid => CLASS_COLOR[cid] || DEF_COLOR;
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // 지도 초기화
-// ═══════════════════════════════════════════════
-function initMap(){
-  map = new kakao.maps.Map(document.getElementById('map'),{
-    center: new kakao.maps.LatLng(37.4, 127.0), level: 9
+// ═══════════════════════════════════════════════════════════
+function initMap() {
+  map = new kakao.maps.Map(document.getElementById('map'), {
+    center: new kakao.maps.LatLng(37.4, 127.2),
+    level: 9
   });
   map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
   map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
+
+  // 클러스터러 초기화
+  clusterer = new kakao.maps.MarkerClusterer({
+    map,
+    averageCenter: true,
+    minLevel: CLUSTER_ZOOM,   // 이 레벨 이상에서만 클러스터 활성
+    disableClickZoom: false,
+    styles: [{
+      width:'40px', height:'40px',
+      background:'rgba(59,130,246,.85)',
+      borderRadius:'50%',
+      color:'#fff',
+      textAlign:'center',
+      lineHeight:'40px',
+      fontSize:'13px',
+      fontWeight:'700',
+      border:'2px solid rgba(255,255,255,.5)'
+    },{
+      width:'50px', height:'50px',
+      background:'rgba(239,68,68,.85)',
+      borderRadius:'50%',
+      color:'#fff',
+      textAlign:'center',
+      lineHeight:'50px',
+      fontSize:'14px',
+      fontWeight:'700',
+      border:'2px solid rgba(255,255,255,.5)'
+    },{
+      width:'60px', height:'60px',
+      background:'rgba(245,158,11,.85)',
+      borderRadius:'50%',
+      color:'#fff',
+      textAlign:'center',
+      lineHeight:'60px',
+      fontSize:'15px',
+      fontWeight:'700',
+      border:'2px solid rgba(255,255,255,.5)'
+    }]
+  });
+
+  // 줌 변경 이벤트 → 뷰포트 렌더링 갱신
+  kakao.maps.event.addListener(map, 'zoom_changed', onMapChange);
+  // 드래그 종료 이벤트 → 뷰포트 렌더링 갱신
+  kakao.maps.event.addListener(map, 'dragend', onMapChange);
+  // 클릭 → 팝업 닫기
   kakao.maps.event.addListener(map, 'click', closeInfo);
+
+  updateZoomBadge();
   toast('지도 로드 완료. GeoJSON 파일을 업로드하세요.', 'info');
 }
 
-function showPlaceholder(){
+function showPlaceholder() {
   const el = document.getElementById('map');
   el.style.cssText = 'display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:#0f172a;';
   el.innerHTML = `<div style="font-size:36px">🗺️</div>
@@ -291,232 +343,288 @@ function showPlaceholder(){
     </div>`;
 }
 
-// ═══════════════════════════════════════════════
-// GeoJSON 업로드 & 렌더링
-// ═══════════════════════════════════════════════
-function triggerUpload(){ document.getElementById('file-input').click(); }
+// ═══════════════════════════════════════════════════════════
+// GeoJSON 로드
+// ═══════════════════════════════════════════════════════════
+function triggerUpload() { document.getElementById('file-input').click(); }
 
-function loadGeoJSON(input){
+function loadGeoJSON(input) {
   const file = input.files[0];
-  if(!file) return;
+  if (!file) return;
   input.value = '';
 
-  showOv('GeoJSON 파일 읽는 중...', 20);
+  showOv('GeoJSON 파일 읽는 중...', 10);
 
   const reader = new FileReader();
-  reader.onload = async (e) => {
-    try{
-      showOv('데이터 파싱 중...', 50);
+  reader.onload = (e) => {
+    try {
+      showOv('JSON 파싱 중...', 30);
       const geojson = JSON.parse(e.target.result);
 
-      if(geojson.type !== 'FeatureCollection')
+      if (geojson.type !== 'FeatureCollection')
         throw new Error('GeoJSON FeatureCollection 형식이 아닙니다.');
 
-      showOv('지도에 렌더링 중...', 80);
-
-      // 기존 데이터 초기화 후 추가
-      clearMap();
       allFeatures = geojson.features || [];
-      dataStats   = geojson.metadata?.stats || {};
+      dataStats = geojson.metadata?.stats || {};
+      layerVis = {};  // 레이어 가시성 초기화
 
-      // 렌더링 (대량 데이터는 청크로 처리)
-      await renderChunked(allFeatures);
+      showOv('데이터 인덱싱 중...', 60);
 
-      buildLegend();
-      updateStats();
-      hideOv();
+      // 기존 지도 객체 제거
+      clearMapObjects();
 
-      const summary = Object.entries(dataStats)
-        .sort((a,b)=>b[1]-a[1]).slice(0,8)
-        .map(([k,v])=>`• ${k}: ${v.toLocaleString()}개`).join('\n');
+      showOv('클러스터 구성 중...', 80);
 
-      addAI(`📂 **GeoJSON 로드 완료**\n\n총 **${allFeatures.length.toLocaleString()}개** 객체가 지도에 표시되었습니다.\n\n**시설물 현황:**\n${summary}\n\n지도에서 객체를 클릭하면 상세 정보와 AI 분석을 요청할 수 있습니다.`);
-      toast(`✅ ${allFeatures.length.toLocaleString()}개 객체 로드 완료`, 'success');
+      // 클러스터러에 전체 포인트 등록 (DOM 객체 최소화)
+      buildClusterer();
 
-    } catch(err){
+      showOv('완료', 100);
+      setTimeout(() => {
+        hideOv();
+        // 현재 줌에 맞게 뷰포트 렌더링
+        onMapChange();
+        buildLegend();
+        updateStats();
+        fitAll();
+
+        const summary = Object.entries(dataStats)
+          .sort((a,b)=>b[1]-a[1]).slice(0,8)
+          .map(([k,v])=>`• ${k}: ${v.toLocaleString()}개`).join('\n');
+        addAI(`📂 **GeoJSON 로드 완료**\n\n총 **${allFeatures.length.toLocaleString()}개** 객체\n\n**시설물 현황:**\n${summary}\n\n줌인하면 개별 객체가 표시됩니다.`);
+        toast(`✅ ${allFeatures.length.toLocaleString()}개 객체 로드 완료`, 'success');
+      }, 100);
+
+    } catch (err) {
       hideOv();
       toast('로드 실패: ' + err.message, 'error');
+      console.error(err);
     }
   };
   reader.readAsText(file, 'utf-8');
 }
 
-let markerImageCache = {};
+// ═══════════════════════════════════════════════════════════
+// 클러스터러 구성 (포인트만 - 경량 마커 사용)
+// 클러스터러는 항상 전체 포인트를 가지고 있고
+// 줌 레벨에 따라 카카오가 자동으로 클러스터/개별 전환
+// ═══════════════════════════════════════════════════════════
+function buildClusterer() {
+  if (!clusterer) return;
+  clusterer.clear();
+  markerCache = {};
 
-async function renderChunked(features){
-  const CHUNK = 300;
-  layerMap = {};
-  markerImageCache = {};
-  let shown = 0;
+  const clusterMarkers = [];
 
-  for(let i = 0; i < features.length; i += CHUNK){
-    const chunk = features.slice(i, i + CHUNK);
-    chunk.forEach(f => {
-      const obj = renderFeature(f);
-      if(!obj) return;
-      const label = f.properties?.label || f.properties?.classId || '기타';
-      if(!layerMap[label]) layerMap[label] = [];
-      layerMap[label].push(obj);
-      shown++;
-    });
-    showOv(`렌더링 중... ${Math.min(i+CHUNK, features.length)}/${features.length}`, 80 + (Math.min(i+CHUNK, features.length)/features.length)*18);
-    await new Promise(r => setTimeout(r, 0));
-  }
-  document.getElementById('s-vis').textContent = shown.toLocaleString();
-  fitAll();
+  allFeatures.forEach(f => {
+    if (!f.geometry) return;
+    const label = f.properties?.label || f.properties?.classId || '기타';
+    if (layerVis[label] === false) return;
+
+    const type = f.geometry.type;
+    if (type === 'Point' || type === 'MultiPoint') {
+      const coords = type === 'Point' ? f.geometry.coordinates : f.geometry.coordinates[0];
+      const [lng, lat] = coords;
+      if (!isFinite(lat) || !isFinite(lng)) return;
+
+      const color = getColor(f.properties?.classId);
+      const m = makeClusterMarker(lat, lng, color, f);
+      if (m) clusterMarkers.push(m);
+    }
+  });
+
+  clusterer.addMarkers(clusterMarkers);
 }
 
-function renderFeature(f){
-  if(!map || !f.geometry) return null;
-  const p   = f.properties || {};
-  const color = getColor(p.classId);
-  const geo = f.geometry;
-  const type = geo.type;
-
-  let kakaoObj = null, geoType = 'point';
-
-  if(type === 'Point'){
-    const [lng, lat] = geo.coordinates;
-    kakaoObj = makeMarker(lat, lng, color, f);
-    geoType = 'point';
-
-  } else if(type === 'MultiPoint'){
-    // 첫 점만 마커
-    const [lng, lat] = geo.coordinates[0];
-    kakaoObj = makeMarker(lat, lng, color, f);
-    geoType = 'point';
-
-  } else if(type === 'LineString'){
-    const path = geo.coordinates.map(([lng,lat]) => new kakao.maps.LatLng(lat, lng));
-    kakaoObj = makeLine(path, color, f);
-    geoType = 'line';
-
-  } else if(type === 'MultiLineString'){
-    const path = geo.coordinates.flat().map(([lng,lat]) => new kakao.maps.LatLng(lat, lng));
-    kakaoObj = makeLine(path, color, f);
-    geoType = 'line';
-
-  } else if(type === 'Polygon'){
-    const path = geo.coordinates[0].map(([lng,lat]) => new kakao.maps.LatLng(lat, lng));
-    kakaoObj = makePoly(path, color, f);
-    geoType = 'poly';
-
-  } else if(type === 'MultiPolygon'){
-    const path = geo.coordinates[0][0].map(([lng,lat]) => new kakao.maps.LatLng(lat, lng));
-    kakaoObj = makePoly(path, color, f);
-    geoType = 'poly';
-  }
-
-  if(!kakaoObj) return null;
-  return { obj: kakaoObj, geoType };
-}
-
-function makeMarker(lat, lng, color, f){
-  const sz = 11;
-  // 색상별 이미지 캐싱
-  if(!markerImageCache[color]){
-    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}"><circle cx="${sz/2}" cy="${sz/2}" r="${sz/2-1}" fill="${color}" opacity=".85" stroke="white" stroke-width="1.2"/></svg>`;
-    markerImageCache[color] = new kakao.maps.MarkerImage(
+function makeClusterMarker(lat, lng, color, f) {
+  // 색상별 마커 이미지 캐시
+  if (!markerCache[color]) {
+    const sz = 12;
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}">` +
+      `<circle cx="${sz/2}" cy="${sz/2}" r="${sz/2-1.5}" fill="${color}" stroke="white" stroke-width="1.5"/>` +
+      `</svg>`;
+    markerCache[color] = new kakao.maps.MarkerImage(
       'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
       new kakao.maps.Size(sz, sz),
       { offset: new kakao.maps.Point(sz/2, sz/2) }
     );
   }
   const m = new kakao.maps.Marker({
-    map, position: new kakao.maps.LatLng(lat, lng),
-    image: markerImageCache[color]
+    position: new kakao.maps.LatLng(lat, lng),
+    image: markerCache[color]
+    // map은 clusterer가 관리하므로 지정 안 함
   });
   kakao.maps.event.addListener(m, 'click', () => showInfo(f));
   return m;
 }
 
-function makeLine(path, color, f){
-  if(path.length < 2) return null;
-  const pl = new kakao.maps.Polyline({ map, path, strokeWeight:2, strokeColor:color, strokeOpacity:.8 });
-  kakao.maps.event.addListener(pl, 'click', () => showInfo(f));
-  return pl;
+// ═══════════════════════════════════════════════════════════
+// 줌/드래그 변경 시 → 뷰포트 기반 렌더링
+// 줌 레벨이 낮을 때(가까이) 뷰포트 안의 선/면 객체 표시
+// ═══════════════════════════════════════════════════════════
+function onMapChange() {
+  updateZoomBadge();
+  const level = map.getLevel();
+
+  // 선/면 객체는 줌 레벨이 낮을 때만 표시
+  if (level <= 7) {
+    renderViewportLines();
+  } else {
+    clearLines();
+  }
+
+  // 뷰포트 내 표시 마커 수 업데이트
+  updateVisCount();
 }
 
-function makePoly(path, color, f){
-  if(path.length < 3) return null;
-  const pg = new kakao.maps.Polygon({ map, path, strokeWeight:1, strokeColor:color, strokeOpacity:.8, fillColor:color, fillOpacity:.2 });
-  kakao.maps.event.addListener(pg, 'click', () => showInfo(f));
-  return pg;
-}
+function renderViewportLines() {
+  clearLines();
+  if (!allFeatures.length) return;
 
-function clearMap(){
-  Object.values(layerMap).flat().forEach(({obj}) => { try{ obj.setMap(null); }catch(e){} });
-  layerMap = {};
-  layerVis = {};
-}
+  const bounds = map.getBounds();
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
 
-function fitAll(){
-  if(!map || !allFeatures.length) return;
-  const bounds = new kakao.maps.LatLngBounds();
-  let added = 0;
+  let count = 0;
   allFeatures.forEach(f => {
-    if(!f.geometry) return;
-    const coords = flatCoords(f.geometry);
-    coords.slice(0, 10).forEach(([lng,lat]) => { bounds.extend(new kakao.maps.LatLng(lat,lng)); added++; });
+    if (!f.geometry) return;
+    const label = f.properties?.label || f.properties?.classId || '기타';
+    if (layerVis[label] === false) return;
+    if (count > 500) return; // 선/면 최대 500개
+
+    const type = f.geometry.type;
+    const color = getColor(f.properties?.classId);
+
+    if (type === 'LineString' || type === 'MultiLineString') {
+      const coords = type === 'LineString' ? f.geometry.coordinates : f.geometry.coordinates.flat();
+      if (!coords.length) return;
+      // 첫 좌표가 뷰포트 안에 있는지 체크
+      const [lng, lat] = coords[0];
+      if (lat < sw.getLat() || lat > ne.getLat() || lng < sw.getLng() || lng > ne.getLng()) return;
+
+      const path = coords.map(([lo, la]) => new kakao.maps.LatLng(la, lo));
+      const pl = new kakao.maps.Polyline({
+        map, path, strokeWeight: 2, strokeColor: color, strokeOpacity: .8
+      });
+      kakao.maps.event.addListener(pl, 'click', () => showInfo(f));
+      visiblePolylines.push(pl);
+      count++;
+
+    } else if (type === 'Polygon' || type === 'MultiPolygon') {
+      const ring = type === 'Polygon' ? f.geometry.coordinates[0] : f.geometry.coordinates[0][0];
+      if (!ring || !ring.length) return;
+      const [lng, lat] = ring[0];
+      if (lat < sw.getLat() || lat > ne.getLat() || lng < sw.getLng() || lng > ne.getLng()) return;
+
+      const path = ring.map(([lo, la]) => new kakao.maps.LatLng(la, lo));
+      const pg = new kakao.maps.Polygon({
+        map, path, strokeWeight: 1, strokeColor: color, strokeOpacity: .8,
+        fillColor: color, fillOpacity: .2
+      });
+      kakao.maps.event.addListener(pg, 'click', () => showInfo(f));
+      visiblePolygons.push(pg);
+      count++;
+    }
   });
-  if(added) map.setBounds(bounds);
 }
 
-function flatCoords(geo){
-  const t = geo.type;
-  if(t==='Point') return [geo.coordinates];
-  if(t==='MultiPoint'||t==='LineString') return geo.coordinates;
-  if(t==='MultiLineString') return geo.coordinates.flat();
-  if(t==='Polygon') return geo.coordinates[0];
-  if(t==='MultiPolygon') return geo.coordinates[0][0];
-  return [];
+function clearLines() {
+  visiblePolylines.forEach(p => p.setMap(null));
+  visiblePolylines = [];
+  visiblePolygons.forEach(p => p.setMap(null));
+  visiblePolygons = [];
 }
 
-// ═══════════════════════════════════════════════
-// 레이어 토글
-// ═══════════════════════════════════════════════
-function toggleGeoType(type, btn){
-  btn.classList.toggle('on');
-  const on = btn.classList.contains('on');
-  Object.values(layerMap).flat().forEach(({obj, geoType}) => {
-    if(geoType === type) obj.setMap(on ? map : null);
-  });
+function clearMapObjects() {
+  clearLines();
+  if (clusterer) clusterer.clear();
+  visibleMarkers = [];
+  markerCache = {};
 }
 
-function toggleLabel(label){
-  const vis = layerVis[label] = !(layerVis[label] !== false);
-  (layerMap[label]||[]).forEach(({obj}) => obj.setMap(vis ? map : null));
+// ═══════════════════════════════════════════════════════════
+// 레이어 가시성 토글
+// ═══════════════════════════════════════════════════════════
+function toggleLabel(label) {
+  layerVis[label] = layerVis[label] === false ? true : false;
+  // 클러스터 재구성
+  buildClusterer();
+  onMapChange();
   buildLegend();
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // 범례 & 통계
-// ═══════════════════════════════════════════════
-function buildLegend(){
-  const labels = Object.keys(layerMap);
-  document.getElementById('s-layers').textContent = labels.length;
+// ═══════════════════════════════════════════════════════════
+function buildLegend() {
+  const labels = [...new Set(allFeatures.map(f => f.properties?.label || f.properties?.classId || '기타'))];
   const el = document.getElementById('legend-items');
-  if(!labels.length){ el.innerHTML='<div style="font-size:11px;color:var(--t3)">GeoJSON 업로드 후 표시</div>'; return; }
+  if (!labels.length) {
+    el.innerHTML = '<div style="font-size:11px;color:var(--t3)">GeoJSON 업로드 후 표시</div>';
+    return;
+  }
   el.innerHTML = labels.map(label => {
-    const f = allFeatures.find(x => x.properties?.label === label);
+    const f = allFeatures.find(x => (x.properties?.label || x.properties?.classId) === label);
     const color = f ? getColor(f.properties?.classId) : DEF_COLOR;
     const vis = layerVis[label] !== false;
-    const cnt = dataStats[label] || (layerMap[label]||[]).length;
-    return `<div class="leg-item ${vis?'':'off'}" onclick="toggleLabel('${label.replace(/'/g,"\\'")}')">
+    const cnt = dataStats[label] || 0;
+    const safeLabel = label.replace(/'/g, "\\'");
+    return `<div class="leg-item ${vis?'':'off'}" onclick="toggleLabel('${safeLabel}')">
       <div class="leg-dot" style="background:${color}"></div>
       <span>${label}(${cnt})</span>
     </div>`;
   }).join('');
 }
 
-function updateStats(){
+function updateStats() {
   document.getElementById('s-total').textContent = allFeatures.length.toLocaleString();
 }
 
-// ═══════════════════════════════════════════════
+function updateVisCount() {
+  if (!map || !allFeatures.length) return;
+  const bounds = map.getBounds();
+  const sw = bounds.getSouthWest();
+  const ne = bounds.getNorthEast();
+  let cnt = 0;
+  allFeatures.forEach(f => {
+    if (!f.geometry) return;
+    const type = f.geometry.type;
+    if (type !== 'Point' && type !== 'MultiPoint') return;
+    const coords = type === 'Point' ? f.geometry.coordinates : f.geometry.coordinates[0];
+    const [lng, lat] = coords;
+    if (lat >= sw.getLat() && lat <= ne.getLat() && lng >= sw.getLng() && lng <= ne.getLng()) cnt++;
+  });
+  document.getElementById('s-vis').textContent = cnt.toLocaleString();
+}
+
+function updateZoomBadge() {
+  if (!map) return;
+  const level = map.getLevel();
+  document.getElementById('zoom-badge').textContent = `줌: ${level}`;
+  document.getElementById('s-zoom').textContent = level;
+}
+
+function fitAll() {
+  if (!map || !allFeatures.length) return;
+  const bounds = new kakao.maps.LatLngBounds();
+  let added = 0;
+  // 샘플링으로 bounds 계산 (전체 순회 불필요)
+  const step = Math.max(1, Math.floor(allFeatures.length / 500));
+  for (let i = 0; i < allFeatures.length; i += step) {
+    const f = allFeatures[i];
+    if (!f.geometry) continue;
+    const type = f.geometry.type;
+    if (type === 'Point') {
+      const [lng, lat] = f.geometry.coordinates;
+      if (isFinite(lat) && isFinite(lng)) { bounds.extend(new kakao.maps.LatLng(lat, lng)); added++; }
+    }
+  }
+  if (added) map.setBounds(bounds);
+}
+
+// ═══════════════════════════════════════════════════════════
 // 객체 정보 팝업
-// ═══════════════════════════════════════════════
-function showInfo(f){
+// ═══════════════════════════════════════════════════════════
+function showInfo(f) {
   selectedF = f;
   const p = f.properties || {};
   document.getElementById('info-ttl').textContent = p.label || p.classId || '객체';
@@ -524,29 +632,29 @@ function showInfo(f){
     <div class="info-row"><span class="info-k">ID</span><span class="info-v">${p.id||'-'}</span></div>
     <div class="info-row"><span class="info-k">클래스</span><span class="info-v">${p.classId||'-'}</span></div>
     <div class="info-row"><span class="info-k">이정</span><span class="info-v">${p.km||'-'}km</span></div>
-    <div class="info-row"><span class="info-k">형태</span><span class="info-v">${f.geometry?.type||'-'}</span></div>
-  `;
+    <div class="info-row"><span class="info-k">형태</span><span class="info-v">${f.geometry?.type||'-'}</span></div>`;
   document.getElementById('info-pop').classList.add('show');
   setCtx(`${p.label||p.classId} · ${p.id} · 이정 ${p.km||'-'}km`);
 }
 
-function closeInfo(){ document.getElementById('info-pop').classList.remove('show'); }
+function closeInfo() { document.getElementById('info-pop').classList.remove('show'); }
 
-function askAI(){
-  if(!selectedF) return;
+function askAI() {
+  if (!selectedF) return;
   const p = selectedF.properties || {};
   send(`${p.label}(ID:${p.id}, 이정:${p.km}km) 시설물을 도로 운영 관점에서 분석해주세요.`);
   closeInfo();
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // 초기화
-// ═══════════════════════════════════════════════
-function resetAll(){
-  if(!confirm('지도의 모든 데이터를 초기화하시겠습니까?')) return;
-  clearMap();
+// ═══════════════════════════════════════════════════════════
+function resetAll() {
+  if (!confirm('지도의 모든 데이터를 초기화하시겠습니까?')) return;
+  clearMapObjects();
   allFeatures = [];
   dataStats = {};
+  layerVis = {};
   buildLegend();
   updateStats();
   document.getElementById('s-vis').textContent = '0';
@@ -554,70 +662,63 @@ function resetAll(){
   toast('초기화 완료', 'info');
 }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // 오버레이
-// ═══════════════════════════════════════════════
-function showOv(msg, pct){
+// ═══════════════════════════════════════════════════════════
+function showOv(msg, pct) {
   document.getElementById('overlay').classList.add('show');
   document.getElementById('ov-msg').textContent = msg;
   document.getElementById('ov-bar').style.width = pct + '%';
 }
-function hideOv(){ document.getElementById('overlay').classList.remove('show'); }
+function hideOv() { document.getElementById('overlay').classList.remove('show'); }
 
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 // 채팅
-// ═══════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════════
 const SYS = `당신은 한국도로공사 정밀도로지도(HD Map) 전문 AI 분석가입니다.
 도로대장 GeoJSON 데이터를 기반으로 도로 안전, C-ITS, 유지보수, 교통 흐름 관점에서 전문적 분석을 한국어로 제공합니다.`;
 
-function setCtx(t){ currentCtx=t; document.getElementById('ctx-txt').textContent=t; document.getElementById('ctx-bar').classList.add('show'); }
-function clearCtx(){ currentCtx=null; document.getElementById('ctx-bar').classList.remove('show'); }
-function sq(t){ send(t); }
+function setCtx(t) { currentCtx = t; document.getElementById('ctx-txt').textContent = t; document.getElementById('ctx-bar').classList.add('show'); }
+function clearCtx() { currentCtx = null; document.getElementById('ctx-bar').classList.remove('show'); }
+function sq(t) { send(t); }
 
-async function send(override){
+async function send(override) {
   const el = document.getElementById('cinput');
   const txt = override || el.value.trim();
-  if(!txt) return;
-  if(!override){ el.value=''; resize(el); }
+  if (!txt) return;
+  if (!override) { el.value = ''; resize(el); }
 
   addUser(txt);
   document.getElementById('sbtn').disabled = true;
 
-  let msg = currentCtx ? `[선택 객체: ${currentCtx}]\n\n${txt}` : txt;
+  const msg = currentCtx ? `[선택 객체: ${currentCtx}]\n\n${txt}` : txt;
   const statsStr = Object.entries(dataStats).slice(0,8).map(([k,v])=>`${k}:${v}개`).join(', ');
   const sys = SYS + (statsStr ? `\n\n[현재 데이터: 총 ${allFeatures.length}개 / ${statsStr}]` : '');
 
   chatHistory.push({ role:'user', content:msg });
   const typing = showTyping();
 
-  try{
-    const res = await fetch('/api/chat',{
+  try {
+    const res = await fetch('/api/chat', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ system:sys, messages:chatHistory })
     });
-    if(!res.ok){ const e=await res.json(); throw new Error(e.error||'서버 오류'); }
+    if (!res.ok) { const e = await res.json(); throw new Error(e.error||'서버 오류'); }
     const data = await res.json();
     typing.remove();
     addAI(data.content);
     chatHistory.push({ role:'assistant', content:data.content });
-  } catch(e){
+  } catch(e) {
     typing.remove();
     addAI(`⚠️ 오류: ${e.message}`);
   }
   document.getElementById('sbtn').disabled = false;
 }
 
-function addUser(t){
-  append('user', `<div class="av">👤</div><div class="mc">${esc(t).replace(/\n/g,'<br>')}</div>`);
-}
-function addAI(t){
-  append('assistant', `<div class="av">🤖</div><div class="mc">${fmt(t)}</div>`);
-}
-function showTyping(){
-  const d = append('assistant','<div class="av">🤖</div><div class="mc"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>');
-  return d;
-}
-function append(role, html){
+function addUser(t) { append('user', `<div class="av">👤</div><div class="mc">${esc(t).replace(/\n/g,'<br>')}</div>`); }
+function addAI(t)   { append('assistant', `<div class="av">🤖</div><div class="mc">${fmt(t)}</div>`); }
+function showTyping() { return append('assistant','<div class="av">🤖</div><div class="mc"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>'); }
+function append(role, html) {
   const d = document.createElement('div');
   d.className = 'msg ' + role;
   d.innerHTML = html;
@@ -625,52 +726,57 @@ function append(role, html){
   scrollBot();
   return d;
 }
-function fmt(t){ return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code>$1</code>').replace(/\n/g,'<br>'); }
-function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-function scrollBot(){ const m=document.getElementById('msgs'); m.scrollTop=m.scrollHeight; }
-function onKey(e){ if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } }
-function resize(el){ el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
+function fmt(t) { return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code>$1</code>').replace(/\n/g,'<br>'); }
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function scrollBot() { const m=document.getElementById('msgs'); m.scrollTop=m.scrollHeight; }
+function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } }
+function resize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
 
-function exportChat(){
+function exportChat() {
   const txt = chatHistory.map(m=>`[${m.role.toUpperCase()}]\n${m.content}`).join('\n\n---\n\n');
   const b = new Blob([`정밀도로지도 AI 분석 리포트\n${new Date().toLocaleString('ko-KR')}\n\n${'='.repeat(40)}\n\n${txt}`],{type:'text/plain;charset=utf-8'});
   const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`road_analysis_${Date.now()}.txt`; a.click();
 }
 
-function toast(msg, type='info'){
-  const colors={success:'#10b981',info:'#3b82f6',error:'#ef4444',warn:'#f59e0b'};
-  const t=document.createElement('div'); t.className='toast';
+function toast(msg, type='info') {
+  const colors = {success:'#10b981',info:'#3b82f6',error:'#ef4444',warn:'#f59e0b'};
+  const t = document.createElement('div'); t.className='toast';
   t.style.borderLeft=`3px solid ${colors[type]||colors.info}`; t.textContent=msg;
   document.body.appendChild(t); setTimeout(()=>t.remove(),3500);
 }
 
+// ═══════════════════════════════════════════════════════════
 // 분할선 드래그
+// ═══════════════════════════════════════════════════════════
 (function(){
-  const d=document.getElementById('dvd'); let drag=false;
-  d.addEventListener('mousedown',e=>{drag=true;e.preventDefault();});
-  document.addEventListener('mousemove',e=>{
-    if(!drag)return;
-    const r=document.querySelector('.main').getBoundingClientRect();
-    const p=Math.min(75,Math.max(30,(e.clientX-r.left)/r.width*100));
-    document.getElementById('map-wrap').style.width=p+'%';
+  const d = document.getElementById('dvd');
+  let drag = false;
+  d.addEventListener('mousedown', e => { drag=true; e.preventDefault(); });
+  document.addEventListener('mousemove', e => {
+    if (!drag) return;
+    const r = document.querySelector('.main').getBoundingClientRect();
+    const p = Math.min(75, Math.max(30, (e.clientX-r.left)/r.width*100));
+    document.getElementById('map-wrap').style.width = p + '%';
   });
-  document.addEventListener('mouseup',()=>drag=false);
+  document.addEventListener('mouseup', () => drag=false);
 })();
 
-// 카카오맵 동적 로드 (함수 정의 후 실행)
+// ═══════════════════════════════════════════════════════════
+// 카카오맵 동적 로드 (모든 함수 정의 후 마지막에 실행)
+// ═══════════════════════════════════════════════════════════
 (async function(){
-  try{
+  try {
     const r = await fetch('/api/config');
     const c = await r.json();
     document.getElementById('srv-status').textContent = '✅ 연결됨';
     document.getElementById('srv-status').style.color = 'var(--green)';
-    if(!c.kakaoKey){ showPlaceholder(); return; }
+    if (!c.kakaoKey) { showPlaceholder(); return; }
     const s = document.createElement('script');
     s.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${c.kakaoKey}&libraries=clusterer&autoload=false`;
     s.onload = () => kakao.maps.load(initMap);
     s.onerror = showPlaceholder;
     document.head.appendChild(s);
-  } catch(e){
+  } catch(e) {
     document.getElementById('srv-status').textContent = '🔴 연결 실패';
     document.getElementById('srv-status').style.color = 'var(--red)';
     showPlaceholder();
