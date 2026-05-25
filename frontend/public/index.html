@@ -245,28 +245,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
   </div>
 </div>
 
-<!-- Kakao Map 동적 로드 -->
-<script>
-(async function(){
-  try{
-    const r = await fetch('/api/config');
-    const c = await r.json();
-    document.getElementById('srv-status').textContent = '✅ 연결됨';
-    document.getElementById('srv-status').style.color = 'var(--green)';
-    if(!c.kakaoKey){ showPlaceholder(); return; }
-    const s = document.createElement('script');
-    s.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${c.kakaoKey}&libraries=clusterer&autoload=false`;
-    s.onload = () => kakao.maps.load(initMap);
-    s.onerror = showPlaceholder;
-    document.head.appendChild(s);
-  } catch(e){
-    document.getElementById('srv-status').textContent = '🔴 연결 실패';
-    document.getElementById('srv-status').style.color = 'var(--red)';
-    showPlaceholder();
-  }
-})();
-</script>
-
 <script>
 // ═══════════════════════════════════════════════
 // 상태
@@ -671,6 +649,26 @@ function toast(msg, type='info'){
     document.getElementById('map-wrap').style.width=p+'%';
   });
   document.addEventListener('mouseup',()=>drag=false);
+})();
+
+// 카카오맵 동적 로드 (함수 정의 후 실행)
+(async function(){
+  try{
+    const r = await fetch('/api/config');
+    const c = await r.json();
+    document.getElementById('srv-status').textContent = '✅ 연결됨';
+    document.getElementById('srv-status').style.color = 'var(--green)';
+    if(!c.kakaoKey){ showPlaceholder(); return; }
+    const s = document.createElement('script');
+    s.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${c.kakaoKey}&libraries=clusterer&autoload=false`;
+    s.onload = () => kakao.maps.load(initMap);
+    s.onerror = showPlaceholder;
+    document.head.appendChild(s);
+  } catch(e){
+    document.getElementById('srv-status').textContent = '🔴 연결 실패';
+    document.getElementById('srv-status').style.color = 'var(--red)';
+    showPlaceholder();
+  }
 })();
 </script>
 </body>
