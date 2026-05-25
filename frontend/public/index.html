@@ -341,9 +341,12 @@ function loadGeoJSON(input){
   reader.readAsText(file, 'utf-8');
 }
 
+let markerImageCache = {};
+
 async function renderChunked(features){
-  const CHUNK = 500;
+  const CHUNK = 300;
   layerMap = {};
+  markerImageCache = {};
   let shown = 0;
 
   for(let i = 0; i < features.length; i += CHUNK){
@@ -356,11 +359,8 @@ async function renderChunked(features){
       layerMap[label].push(obj);
       shown++;
     });
-    // UI 블로킹 방지
-    if(i % 2000 === 0){
-      showOv(`렌더링 중... ${i}/${features.length}`, 80 + (i/features.length)*18);
-      await new Promise(r => setTimeout(r, 0));
-    }
+    showOv(`렌더링 중... ${Math.min(i+CHUNK, features.length)}/${features.length}`, 80 + (Math.min(i+CHUNK, features.length)/features.length)*18);
+    await new Promise(r => setTimeout(r, 0));
   }
   document.getElementById('s-vis').textContent = shown.toLocaleString();
   fitAll();
@@ -413,13 +413,19 @@ function renderFeature(f){
 
 function makeMarker(lat, lng, color, f){
   const sz = 11;
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}"><circle cx="${sz/2}" cy="${sz/2}" r="${sz/2-1}" fill="${color}" opacity=".85" stroke="white" stroke-width="1.2"/></svg>`;
-  const img = new kakao.maps.MarkerImage(
-    'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
-    new kakao.maps.Size(sz, sz),
-    { offset: new kakao.maps.Point(sz/2, sz/2) }
-  );
-  const m = new kakao.maps.Marker({ map, position: new kakao.maps.LatLng(lat, lng), image: img });
+  // 색상별 이미지 캐싱
+  if(!markerImageCache[color]){
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}"><circle cx="${sz/2}" cy="${sz/2}" r="${sz/2-1}" fill="${color}" opacity=".85" stroke="white" stroke-width="1.2"/></svg>`;
+    markerImageCache[color] = new kakao.maps.MarkerImage(
+      'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
+      new kakao.maps.Size(sz, sz),
+      { offset: new kakao.maps.Point(sz/2, sz/2) }
+    );
+  }
+  const m = new kakao.maps.Marker({
+    map, position: new kakao.maps.LatLng(lat, lng),
+    image: markerImageCache[color]
+  });
   kakao.maps.event.addListener(m, 'click', () => showInfo(f));
   return m;
 }
