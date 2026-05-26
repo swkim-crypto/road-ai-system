@@ -73,7 +73,7 @@ body{display:flex;flex-direction:column;}
 .ov-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:4px;transition:width .3s;width:0%;}
 .ov-msg{font-size:11px;color:var(--t2);}
 
-/* 객체 팝업 */
+/* 객체 단일 팝업 (클릭 시) */
 .info-pop{position:absolute;top:8px;right:8px;background:rgba(15,23,42,.97);border:1px solid var(--borderB);border-radius:9px;padding:10px 13px;z-index:50;min-width:190px;max-width:230px;display:none;}
 .info-pop.show{display:block;}
 .info-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
@@ -85,6 +85,63 @@ body{display:flex;flex-direction:column;}
 .info-v{font-size:10px;color:var(--t2);font-family:'JetBrains Mono',monospace;}
 .ai-btn{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:var(--cyan);margin-top:6px;font-family:'Noto Sans KR',sans-serif;}
 .ai-btn:hover{background:rgba(6,182,212,.25);}
+
+/* QGIS 스타일 속성 테이블 팝업 */
+.attr-table-wrap{
+  position:absolute;bottom:38px;left:0;right:0;
+  background:rgba(10,14,26,.97);border-top:2px solid var(--borderB);
+  z-index:100;display:none;flex-direction:column;
+  max-height:42vh;min-height:160px;
+  backdrop-filter:blur(6px);
+}
+.attr-table-wrap.show{display:flex;}
+.attr-tbl-hdr{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:5px 10px;border-bottom:1px solid var(--border);
+  background:var(--panel);flex-shrink:0;gap:8px;
+}
+.attr-tbl-title{font-size:11px;font-weight:600;display:flex;align-items:center;gap:6px;white-space:nowrap;}
+.attr-tbl-badge{font-size:9px;padding:1px 6px;border-radius:3px;background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.25);font-family:'JetBrains Mono',monospace;}
+.attr-tbl-search{flex:1;min-width:0;max-width:220px;padding:3px 7px;background:var(--card);border:1px solid var(--border);border-radius:4px;color:var(--t1);font-size:10px;outline:none;font-family:'Noto Sans KR',sans-serif;}
+.attr-tbl-search:focus{border-color:var(--blue);}
+.attr-tbl-search::placeholder{color:var(--t3);}
+.attr-tbl-btns{display:flex;gap:4px;flex-shrink:0;}
+.attr-tbl-btn{padding:3px 7px;border-radius:4px;font-size:10px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--t2);font-family:'Noto Sans KR',sans-serif;white-space:nowrap;}
+.attr-tbl-btn:hover{border-color:var(--blue);color:var(--blue);}
+.attr-tbl-btn.close-btn{border-color:rgba(239,68,68,.3);color:var(--red);}
+.attr-tbl-btn.close-btn:hover{background:rgba(239,68,68,.1);}
+
+/* 테이블 스크롤 영역 */
+.attr-tbl-scroll{flex:1;overflow:auto;min-height:0;}
+.attr-tbl-scroll::-webkit-scrollbar{width:4px;height:4px;}
+.attr-tbl-scroll::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
+table.attr-tbl{
+  width:100%;border-collapse:collapse;font-size:10px;
+  font-family:'JetBrains Mono',monospace;
+}
+table.attr-tbl thead{position:sticky;top:0;z-index:2;background:var(--panel);}
+table.attr-tbl th{
+  padding:4px 10px;text-align:left;color:var(--t3);
+  font-size:9px;font-weight:600;letter-spacing:.4px;text-transform:uppercase;
+  border-bottom:1px solid var(--border);white-space:nowrap;
+  background:var(--panel);
+}
+table.attr-tbl td{
+  padding:3px 10px;color:var(--t2);border-bottom:1px solid rgba(148,163,184,.06);
+  white-space:nowrap;max-width:240px;overflow:hidden;text-overflow:ellipsis;
+}
+table.attr-tbl tr{cursor:pointer;transition:background .1s;}
+table.attr-tbl tr:hover td{background:rgba(59,130,246,.08);}
+table.attr-tbl tr.selected td{background:rgba(59,130,246,.18);color:var(--t1);}
+table.attr-tbl td.km-cell{color:var(--cyan);}
+table.attr-tbl td.id-cell{color:var(--t3);}
+/* 리사이즈 핸들 */
+.attr-tbl-resize{height:4px;background:transparent;cursor:ns-resize;flex-shrink:0;}
+.attr-tbl-resize:hover{background:var(--borderB);}
+/* 하이라이트 마커 강조 */
+.feat-highlight{
+  position:absolute;pointer-events:none;
+}
 
 /* AI 패널 */
 .chat{width:310px;flex-shrink:0;display:flex;flex-direction:column;background:var(--bg2);border-left:1px solid var(--border);overflow:hidden;}
@@ -224,6 +281,27 @@ body{display:flex;flex-direction:column;}
       <div id="info-body"></div>
       <button class="ai-btn" onclick="askAI()">🤖 AI 분석 요청</button>
     </div>
+
+    <!-- QGIS 스타일 속성 테이블 -->
+    <div class="attr-table-wrap" id="attr-table-wrap">
+      <div class="attr-tbl-resize" id="attr-tbl-resize"></div>
+      <div class="attr-tbl-hdr">
+        <div class="attr-tbl-title">
+          <span id="attr-tbl-layer-dot" style="width:8px;height:8px;border-radius:50%;display:inline-block;background:#3b82f6;flex-shrink:0;"></span>
+          <span id="attr-tbl-layer-name">레이어</span>
+          <span class="attr-tbl-badge" id="attr-tbl-count">0</span>
+        </div>
+        <input class="attr-tbl-search" id="attr-tbl-search" placeholder="🔍 km, ID 검색..." oninput="filterAttrTable(this.value)">
+        <div class="attr-tbl-btns">
+          <button class="attr-tbl-btn" onclick="fitLayerBounds()">🗺️ 전체보기</button>
+          <button class="attr-tbl-btn" onclick="askAILayer()">🤖 AI 분석</button>
+          <button class="attr-tbl-btn close-btn" onclick="closeAttrTable()">✕ 닫기</button>
+        </div>
+      </div>
+      <div class="attr-tbl-scroll" id="attr-tbl-scroll">
+        <table class="attr-tbl" id="attr-tbl"></table>
+      </div>
+    </div>
   </div>
 
   <!-- 오른쪽: AI 채팅 -->
@@ -283,33 +361,48 @@ body{display:flex;flex-direction:column;}
 // 레이어 정의
 // ═══════════════════════════════════════════════════════════
 const LAYER_DEFS = {
-  '차도구간(교량)':               { name:'교량',        color:'#3b82f6', default:true,  max:500  },
-  '차도구간(터널)':               { name:'터널',        color:'#8b5cf6', default:true,  max:200  },
-  '벽/휀스(옹벽)':               { name:'옹벽',        color:'#f97316', default:true,  max:500  },
-  '이정(중심,연결로)':            { name:'이정(중심)',  color:'#10b981', default:true,  max:2000 },
-  '이정(갓길이정)':               { name:'이정(갓길)',  color:'#84cc16', default:false, max:3000 },
-  '주행경로노드':                 { name:'경로노드',    color:'#06b6d4', default:false, max:500  },
-  '주행경로링크':                 { name:'경로링크',    color:'#a78bfa', default:false, max:300  },
-  '도로전광표지(VMS)':            { name:'VMS',         color:'#f59e0b', default:false, max:100  },
-  'DSRC':                         { name:'DSRC',        color:'#ef4444', default:false, max:100  },
-  'CCTV':                         { name:'CCTV',        color:'#f97316', default:false, max:300  },
-  '가로등':                       { name:'가로등',      color:'#fbbf24', default:false, max:1000 },
-  '교통안전표지':                 { name:'교통안전표지',color:'#ec4899', default:false, max:500  },
-  '노면선표시':                   { name:'노면선표시',  color:'#64748b', default:false, max:200  },
-  '노면안내표시':                 { name:'노면안내표시',color:'#94a3b8', default:false, max:200  },
-  '도로안내표지':                 { name:'도로안내표지',color:'#fb923c', default:false, max:200  },
-  '차량방호안전시설(중앙분리대)': { name:'중앙분리대',  color:'#6366f1', default:false, max:300  },
-  '차량방호안전시설(방호울타리)': { name:'방호울타리',  color:'#7c3aed', default:false, max:300  },
-  '충격흡수시설':                 { name:'충격흡수',    color:'#dc2626', default:false, max:100  },
-  '과속방지턱':                   { name:'과속방지턱',  color:'#d97706', default:false, max:100  },
-  '도로대장 총괄':                { name:'도로대장',    color:'#0891b2', default:false, max:200  },
-  '도로중심선교점':               { name:'중심선교점',  color:'#0d9488', default:false, max:200  },
-  '요금소':                       { name:'요금소',      color:'#7c3aed', default:false, max:30   },
-  '차로신호제어기(LCS)':          { name:'LCS',         color:'#2563eb', default:false, max:50   },
-  '긴급전화':                     { name:'긴급전화',    color:'#dc2626', default:false, max:50   },
-  '차량검지기(VDS)':              { name:'VDS',         color:'#0891b2', default:false, max:50   },
-  '제설시설':                     { name:'제설시설',    color:'#7dd3fc', default:false, max:100  },
-  '생태통로':                     { name:'생태통로',    color:'#4ade80', default:false, max:30   },
+  // ── 기본 표시 레이어 ──────────────────────────────────────
+  '차도구간(교량)':               { name:'교량',          color:'#3b82f6', default:true,  max:500  },
+  '차도구간(터널)':               { name:'터널',          color:'#8b5cf6', default:true,  max:200  },
+  '차도구간(지하차도)':           { name:'지하차도',      color:'#6366f1', default:true,  max:50   },
+  '차도구간(IC)':                 { name:'IC',            color:'#a78bfa', default:true,  max:50   },
+  '이정(갓길이정)':               { name:'이정(갓길)',    color:'#10b981', default:true,  max:3000 },
+  // ── 도로 구조 ─────────────────────────────────────────────
+  '100m 단위도로면':              { name:'도로면(100m)',  color:'#0e7490', default:false, max:2009 },
+  '측정점':                       { name:'측정점',        color:'#06b6d4', default:false, max:2791 },
+  '주행경로노드':                 { name:'경로노드',      color:'#22d3ee', default:false, max:1090 },
+  '도로구역':                     { name:'도로구역',      color:'#0891b2', default:false, max:9    },
+  '접도구역':                     { name:'접도구역',      color:'#0369a1', default:false, max:57   },
+  '차도부경계':                   { name:'차도부경계',    color:'#0284c7', default:false, max:12   },
+  '이정(거리표)':                 { name:'이정(거리표)',  color:'#84cc16', default:false, max:62   },
+  // ── 안전 시설 ─────────────────────────────────────────────
+  '교통안전표지':                 { name:'교통안전표지',  color:'#ec4899', default:false, max:414  },
+  '노면안내표시':                 { name:'노면안내표시',  color:'#f472b6', default:false, max:332  },
+  '도로안내표지':                 { name:'도로안내표지',  color:'#fb923c', default:false, max:171  },
+  '차량방호안전시설(충격흡수)':   { name:'충격흡수',      color:'#dc2626', default:false, max:56   },
+  '과속방지턱':                   { name:'과속방지턱',    color:'#d97706', default:false, max:27   },
+  // ── 지형 시설 ─────────────────────────────────────────────
+  '사면(도로성토면)':             { name:'성토면',        color:'#92400e', default:false, max:176  },
+  '사면(도로절개면)':             { name:'절개면',        color:'#78350f', default:false, max:64   },
+  '통로박스':                     { name:'통로박스',      color:'#a16207', default:false, max:43   },
+  '배수암거/배수관':              { name:'배수암거',      color:'#1d4ed8', default:false, max:34   },
+  '교차시설':                     { name:'교차시설',      color:'#7c3aed', default:false, max:16   },
+  '부속구간(졸음쉼터)':           { name:'졸음쉼터',      color:'#16a34a', default:false, max:12   },
+  '부속구간(휴게소)':             { name:'휴게소',        color:'#15803d', default:false, max:6    },
+  '요금소':                       { name:'요금소',        color:'#7c3aed', default:false, max:6    },
+  '주차면':                       { name:'주차면',        color:'#4f46e5', default:false, max:20   },
+  '생태통로':                     { name:'생태통로',      color:'#4ade80', default:false, max:1    },
+  // ── C-ITS / 전자장비 ──────────────────────────────────────
+  '도로전광표지(VMS)':            { name:'VMS',           color:'#f59e0b', default:false, max:24   },
+  'DSRC':                         { name:'DSRC',          color:'#ef4444', default:false, max:32   },
+  'CCTV':                         { name:'CCTV',          color:'#f97316', default:false, max:45   },
+  '차로신호제어기(LCS)':          { name:'LCS',           color:'#2563eb', default:false, max:34   },
+  '차량검지기(VDS)':              { name:'VDS',           color:'#0891b2', default:false, max:56   },
+  // ── 가로시설 ──────────────────────────────────────────────
+  '가로등':                       { name:'가로등',        color:'#fbbf24', default:false, max:1372 },
+  '가로수':                       { name:'가로수',        color:'#22c55e', default:false, max:805  },
+  '도로점용(점)':                 { name:'도로점용',      color:'#a3e635', default:false, max:213  },
+  '제설시설':                     { name:'제설시설',      color:'#7dd3fc', default:false, max:10   },
 };
 const DEF_LAYER = { name:'기타', color:'#64748b', default:false, max:300 };
 const getLDef = l => LAYER_DEFS[l] || DEF_LAYER;
@@ -501,13 +594,17 @@ function liHTML(label) {
   const def = getLDef(label);
   const cnt = (allFeatures[label]||[]).length;
   const sid = safeId(label);
-  return `<div class="layer-item" id="li_${sid}" onclick="toggleLayer('${label.replace(/'/g,"\\'")}')">
-    <div class="layer-cb"></div>
-    <div class="layer-dot" style="background:${def.color}"></div>
-    <div class="layer-info">
+  const esc = label.replace(/'/g,"\\'");
+  return `<div class="layer-item" id="li_${sid}">
+    <div class="layer-cb" onclick="toggleLayer('${esc}')"></div>
+    <div class="layer-dot" style="background:${def.color}" onclick="toggleLayer('${esc}')"></div>
+    <div class="layer-info" onclick="toggleLayer('${esc}')" style="flex:1;min-width:0;cursor:pointer;">
       <div class="layer-name" title="${label}">${def.name}</div>
       <div class="layer-cnt">${cnt.toLocaleString()}</div>
     </div>
+    <div title="속성 테이블" onclick="openAttrTable('${esc}')"
+      style="flex-shrink:0;padding:2px 4px;border-radius:3px;cursor:pointer;color:var(--t3);font-size:11px;line-height:1;"
+      onmouseover="this.style.color='var(--cyan)'" onmouseout="this.style.color='var(--t3)'">≡</div>
   </div>`;
 }
 
@@ -679,14 +776,13 @@ function hideOv() { document.getElementById('overlay').classList.remove('show');
 // ═══════════════════════════════════════════════════════════
 // 객체 팝업
 // ═══════════════════════════════════════════════════════════
-function showInfo(p, gtype) {
+function showInfo(p, gtype, moveMap=true) {
   selectedProp = p;
   document.getElementById('info-ttl').textContent = p.label || p.classId || '객체';
-  document.getElementById('info-body').innerHTML = `
-    <div class="info-row"><span class="info-k">ID</span><span class="info-v">${p.id||'-'}</span></div>
-    <div class="info-row"><span class="info-k">클래스</span><span class="info-v">${p.classId||'-'}</span></div>
-    <div class="info-row"><span class="info-k">이정</span><span class="info-v">${p.km||'-'}km</span></div>
-    <div class="info-row"><span class="info-k">형태</span><span class="info-v">${gtype||'-'}</span></div>`;
+  const rows = Object.entries(p).map(([k,v]) =>
+    `<div class="info-row"><span class="info-k">${k}</span><span class="info-v">${v??'-'}</span></div>`
+  ).join('');
+  document.getElementById('info-body').innerHTML = rows;
   document.getElementById('info-pop').classList.add('show');
   setCtx(`${p.label||p.classId} · ${p.id} · 이정 ${p.km||'-'}km`);
 }
@@ -1044,8 +1140,213 @@ function clearAIOverlays() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 채팅
+// 속성 테이블 (QGIS 스타일)
 // ═══════════════════════════════════════════════════════════
+let attrTableLabel   = null;   // 현재 열린 레이어
+let attrTableFiltered = [];    // 필터링된 feature 목록
+let attrHighlight    = null;   // 하이라이트 오버레이
+let attrSelectedIdx  = -1;     // 선택된 행 인덱스
+let _attrAllCols     = [];     // 컬럼 목록 캐시
+
+function openAttrTable(label) {
+  const features = allFeatures[label];
+  if (!features || !features.length) { toast('데이터 없음', 'warn'); return; }
+
+  attrTableLabel = label;
+  attrSelectedIdx = -1;
+  clearAttrHighlight();
+
+  const def = getLDef(label);
+  document.getElementById('attr-tbl-layer-dot').style.background = def.color;
+  document.getElementById('attr-tbl-layer-name').textContent = def.name || label;
+  document.getElementById('attr-tbl-search').value = '';
+
+  // 컬럼 목록 수집 (모든 feature의 properties 키 합집합)
+  const colSet = new Set();
+  features.forEach(f => Object.keys(f.properties || {}).forEach(k => colSet.add(k)));
+  _attrAllCols = [...colSet];
+
+  // km 기준 정렬
+  attrTableFiltered = [...features].sort((a, b) => {
+    const ak = parseFloat(a.properties?.km ?? 9999);
+    const bk = parseFloat(b.properties?.km ?? 9999);
+    return ak - bk;
+  });
+
+  renderAttrTable(attrTableFiltered);
+  document.getElementById('attr-table-wrap').classList.add('show');
+  closeInfo();
+  initResizeHandle();
+}
+
+function renderAttrTable(features) {
+  document.getElementById('attr-tbl-count').textContent = features.length.toLocaleString() + '개';
+
+  const cols = _attrAllCols;
+  let html = `<thead><tr>
+    <th style="width:28px;">#</th>`;
+  cols.forEach(c => { html += `<th>${c}</th>`; });
+  html += `</tr></thead><tbody>`;
+
+  features.forEach((f, idx) => {
+    const p = f.properties || {};
+    const isSelected = idx === attrSelectedIdx;
+    html += `<tr class="${isSelected?'selected':''}" onclick="selectAttrRow(${idx},this)">
+      <td class="id-cell">${idx+1}</td>`;
+    cols.forEach(c => {
+      const v = p[c] ?? '-';
+      const cls = c === 'km' ? 'km-cell' : c === 'id' ? 'id-cell' : '';
+      html += `<td class="${cls}" title="${v}">${v}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody>`;
+  document.getElementById('attr-tbl').innerHTML = html;
+}
+
+function filterAttrTable(q) {
+  const features = allFeatures[attrTableLabel] || [];
+  const lq = q.toLowerCase().trim();
+  if (!lq) {
+    attrTableFiltered = [...features].sort((a,b) => parseFloat(a.properties?.km??9999) - parseFloat(b.properties?.km??9999));
+  } else {
+    attrTableFiltered = features.filter(f => {
+      const p = f.properties || {};
+      return Object.values(p).some(v => String(v).toLowerCase().includes(lq));
+    }).sort((a,b) => parseFloat(a.properties?.km??9999) - parseFloat(b.properties?.km??9999));
+  }
+  attrSelectedIdx = -1;
+  renderAttrTable(attrTableFiltered);
+}
+
+function selectAttrRow(idx, rowEl) {
+  attrSelectedIdx = idx;
+  // 행 선택 표시
+  document.querySelectorAll('#attr-tbl tbody tr').forEach(tr => tr.classList.remove('selected'));
+  rowEl.classList.add('selected');
+
+  const f = attrTableFiltered[idx];
+  if (!f || !f.geometry) return;
+
+  // 기존 하이라이트 제거 후 새 하이라이트
+  clearAttrHighlight();
+  highlightFeature(f);
+
+  // 지도 이동
+  const geom = f.geometry;
+  if (geom.type === 'Point') {
+    const [lng, lat] = geom.coordinates;
+    map.setCenter(new kakao.maps.LatLng(lat, lng));
+    map.setLevel(5);
+  } else if (geom.type === 'Polygon') {
+    const bounds = new kakao.maps.LatLngBounds();
+    geom.coordinates[0].forEach(([lo, la]) => bounds.extend(new kakao.maps.LatLng(la, lo)));
+    map.setBounds(bounds, 60);
+  }
+
+  // 정보 팝업도 동시에 갱신
+  showInfo(f.properties, geom.type, false);
+}
+
+function highlightFeature(f) {
+  if (!map || !f.geometry) return;
+  const geom = f.geometry;
+  const color = '#f59e0b'; // 강조색 amber
+
+  if (geom.type === 'Point') {
+    const [lng, lat] = geom.coordinates;
+    const pos = new kakao.maps.LatLng(lat, lng);
+    attrHighlight = new kakao.maps.Circle({
+      map, center: pos, radius: 60,
+      strokeWeight: 3, strokeColor: color, strokeOpacity: 1,
+      fillColor: color, fillOpacity: .35
+    });
+    // 라벨
+    const p = f.properties || {};
+    const label = new kakao.maps.CustomOverlay({
+      map, position: pos,
+      content: `<div style="background:${color};color:#000;padding:2px 8px;border-radius:4px;font-size:11px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,.4);">▶ ${p.label||p.classId||'?'} ${p.km?p.km+'km':''}</div>`,
+      yAnchor: 3.0
+    });
+    attrHighlight = { circle: attrHighlight, label };
+  } else if (geom.type === 'Polygon') {
+    const path = geom.coordinates[0].map(([lo, la]) => new kakao.maps.LatLng(la, lo));
+    attrHighlight = new kakao.maps.Polygon({
+      map, path,
+      strokeWeight: 3, strokeColor: color, strokeOpacity: 1,
+      fillColor: color, fillOpacity: .4
+    });
+  }
+}
+
+function clearAttrHighlight() {
+  if (!attrHighlight) return;
+  if (attrHighlight.circle) {
+    try { attrHighlight.circle.setMap(null); } catch(e){}
+    try { attrHighlight.label.setMap(null); } catch(e){}
+  } else {
+    try { attrHighlight.setMap(null); } catch(e){}
+  }
+  attrHighlight = null;
+}
+
+function closeAttrTable() {
+  document.getElementById('attr-table-wrap').classList.remove('show');
+  clearAttrHighlight();
+  attrTableLabel = null;
+}
+
+function fitLayerBounds() {
+  if (!attrTableLabel) return;
+  const features = allFeatures[attrTableLabel] || [];
+  const bounds = new kakao.maps.LatLngBounds();
+  let cnt = 0;
+  features.forEach((f, i) => {
+    if (i % 3 !== 0 || !f.geometry) return;
+    const geom = f.geometry;
+    if (geom.type === 'Point') {
+      const [lng, lat] = geom.coordinates;
+      if (isFinite(lat) && isFinite(lng)) { bounds.extend(new kakao.maps.LatLng(lat, lng)); cnt++; }
+    } else if (geom.type === 'Polygon') {
+      const [lo, la] = geom.coordinates[0][0];
+      if (isFinite(la) && isFinite(lo)) { bounds.extend(new kakao.maps.LatLng(la, lo)); cnt++; }
+    }
+  });
+  if (cnt) map.setBounds(bounds, 40);
+}
+
+function askAILayer() {
+  if (!attrTableLabel) return;
+  const def = getLDef(attrTableLabel);
+  const cnt = (allFeatures[attrTableLabel]||[]).length;
+  const kmVals = (allFeatures[attrTableLabel]||[])
+    .map(f => parseFloat(f.properties?.km)).filter(v => !isNaN(v)).sort((a,b)=>a-b);
+  const kmRange = kmVals.length ? `(이정 ${kmVals[0].toFixed(2)}~${kmVals[kmVals.length-1].toFixed(2)}km)` : '';
+  send(`${def.name || attrTableLabel} 레이어 ${cnt}개 시설물 ${kmRange}을 도로 안전 관점에서 분석해주세요.`);
+  closeAttrTable();
+}
+
+// 드래그로 테이블 높이 조절
+function initResizeHandle() {
+  const handle = document.getElementById('attr-tbl-resize');
+  const wrap   = document.getElementById('attr-table-wrap');
+  if (handle._initDone) return;
+  handle._initDone = true;
+  let startY, startH;
+  handle.addEventListener('mousedown', e => {
+    startY = e.clientY;
+    startH = wrap.offsetHeight;
+    const onMove = ev => {
+      const delta = startY - ev.clientY;
+      const newH  = Math.min(Math.max(startH + delta, 120), window.innerHeight * 0.7);
+      wrap.style.maxHeight = newH + 'px';
+    };
+    const onUp = () => { document.removeEventListener('mousemove', onMove); document.removeEventListener('mouseup', onUp); };
+    document.addEventListener('mousemove', onMove);
+    document.addEventListener('mouseup', onUp);
+    e.preventDefault();
+  });
+}
 const SYS = `당신은 한국도로공사 정밀도로지도(HD Map) 전문 AI 분석가입니다.
 도로대장 GeoJSON 데이터 기반으로 도로 안전, C-ITS, 유지보수, 교통 흐름 관점에서 전문적 분석을 한국어로 제공합니다.
 
