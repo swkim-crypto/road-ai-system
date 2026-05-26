@@ -145,6 +145,15 @@ body{display:flex;flex-direction:column;}
 .inp-hint{font-size:9px;color:var(--t3);}
 
 .toast{position:fixed;bottom:14px;right:14px;z-index:9999;background:rgba(15,23,42,.95);border-radius:7px;padding:7px 12px;font-size:11px;color:var(--t1);max-width:260px;backdrop-filter:blur(8px);animation:fi .2s ease;}
+
+/* AI 지도 액션 - 위험도 색상 */
+.map-act-btn.sev-danger { border-color:rgba(239,68,68,.5)!important; color:#ef4444!important; background:rgba(239,68,68,.12)!important; }
+.map-act-btn.sev-danger:hover { background:rgba(239,68,68,.22)!important; }
+.map-act-btn.sev-warning { border-color:rgba(245,158,11,.5)!important; color:#f59e0b!important; background:rgba(245,158,11,.12)!important; }
+.map-act-btn.sev-warning:hover { background:rgba(245,158,11,.22)!important; }
+.map-act-btn.sev-info { border-color:rgba(59,130,246,.5)!important; color:#3b82f6!important; background:rgba(59,130,246,.12)!important; }
+.map-act-btn.sev-info:hover { background:rgba(59,130,246,.22)!important; }
+.map-act-section { font-size:9px; color:var(--t3); padding:2px 0 1px; width:100%; letter-spacing:.4px; text-transform:uppercase; }
 </style>
 </head>
 <body>
@@ -672,69 +681,112 @@ function askAI() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// AI 결과 → 지도 반영
+// AI 결과 → 지도 반영 (강화 버전)
 // ═══════════════════════════════════════════════════════════
-function extractKmValues(text) {
-  const vals = new Set();
-  [...text.matchAll(/이정\s*([\d.]+)\s*km|([\d.]+)\s*km\s*구간/g)].forEach(m => {
-    const v = parseFloat(m[1]||m[2]);
-    if (!isNaN(v) && v > 0 && v < 200) vals.add(v);
-  });
-  return [...vals].slice(0,5);
+
+// 위험도 키워드 → severity
+const SEV_KEYWORDS = {
+  danger:  ['위험','균열','붕괴','파손','침하','긴급','사고','취약','결함','불량','이상'],
+  warning: ['주의','노후','점검','열화','마모','부식','경고','관리','손상'],
+  info:    ['분석','현황','위치','분포','설치','확인','검토']
+};
+function detectSeverity(text) {
+  const t = text;
+  if (SEV_KEYWORDS.danger.some(k  => t.includes(k))) return 'danger';
+  if (SEV_KEYWORDS.warning.some(k => t.includes(k))) return 'warning';
+  return 'info';
+}
+
+// km 파싱: 단일값 + 구간 모두 추출
+function parseKmMentions(text) {
+  const results = [];
+  const seen = new Set();
+
+  // 패턴1: 구간 — "X.Xkm ~ Y.Ykm", "X.X~Y.Ykm", "X.Xkm부터 Y.Ykm"
+  const rangeRe = /([\d.]+)\s*(?:km)?\s*(?:~|∼|〜|부터|에서)\s*([\d.]+)\s*km/g;
+  for (const m of text.matchAll(rangeRe)) {
+    const from = parseFloat(m[1]), to = parseFloat(m[2]);
+    if (!isNaN(from) && !isNaN(to) && from >= 0 && to <= 200 && from < to) {
+      const key = `r_${from}_${to}`;
+      if (!seen.has(key)) { seen.add(key); results.push({ type:'range', from, to }); }
+    }
+  }
+
+  // 패턴2: 단일값 — "이정 X.XXkm", "X.XXkm 지점", "X.XXkm 부근"
+  const pointRe = /(?:이정\s*|km\s*값\s*)?([\d.]+)\s*km(?:\s*(?:지점|부근|위치|구간|포인트|전후))?/g;
+  for (const m of text.matchAll(pointRe)) {
+    const v = parseFloat(m[1]);
+    if (!isNaN(v) && v >= 0 && v <= 200) {
+      // 구간에 속하는 값이면 스킵
+      const inRange = results.some(r => r.type==='range' && Math.abs(r.from-v)<0.01);
+      const key = `p_${v}`;
+      if (!seen.has(key) && !inRange) { seen.add(key); results.push({ type:'point', km: v }); }
+    }
+  }
+
+  return results.slice(0, 8);
 }
 
 function extractMentionedLayers(text) {
   return Object.keys(allFeatures).filter(label => {
     const def = getLDef(label);
-    return (text.includes(def.name)||text.includes(label)) && !layerActive[label];
-  }).slice(0,3);
+    return (text.includes(def.name) || text.includes(label)) && !layerActive[label];
+  }).slice(0, 3);
 }
 
+// 이정 spine에서 km 위치의 좌표 찾기
 function findCoordByKm(km) {
-  const src = allFeatures['이정(중심,연결로)'] || allFeatures['이정(갓길이정)'] || [];
+  const src = allFeatures['이정(갓길이정)'] || allFeatures['이정(중심,연결로)'] || [];
   let best = null, bestDiff = 999;
   src.forEach(f => {
     const fkm = parseFloat(f.properties?.km);
     if (isNaN(fkm)) return;
     const d = Math.abs(fkm - km);
-    if (d < bestDiff) { bestDiff=d; best=f; }
+    if (d < bestDiff) { bestDiff = d; best = f; }
   });
   if (best?.geometry?.type === 'Point') {
-    const [lng,lat] = best.geometry.coordinates;
+    const [lng, lat] = best.geometry.coordinates;
     return new kakao.maps.LatLng(lat, lng);
   }
   return null;
 }
 
-function buildMapActions(text) {
-  const kmVals = extractKmValues(text);
-  const layers  = extractMentionedLayers(text);
-  const bar = document.getElementById('map-action-bar');
-  if (!kmVals.length && !layers.length) { bar.classList.remove('show'); return; }
-  bar.classList.add('show');
-  let html = '';
-  kmVals.forEach(km => html += `<button class="map-act-btn" onclick="showKmCircle(${km})">📍 ${km}km</button>`);
-  layers.forEach(label => html += `<button class="map-act-btn" onclick="activateLayerFromAI('${label.replace(/'/g,"\\'")}')">+ ${getLDef(label).name}</button>`);
-  html += `<button class="map-act-btn map-act-del" onclick="clearAIOverlays()">✕ 제거</button>`;
-  document.getElementById('map-action-btns').innerHTML = html;
+// 이정 spine에서 km 구간 좌표 배열 추출
+function findCoordsInRange(kmFrom, kmTo) {
+  const src = allFeatures['이정(갓길이정)'] || allFeatures['이정(중심,연결로)'] || [];
+  const margin = 0.05; // 50m 여유
+  const pts = src
+    .filter(f => {
+      const fkm = parseFloat(f.properties?.km);
+      return !isNaN(fkm) && fkm >= (kmFrom - margin) && fkm <= (kmTo + margin) && f.geometry?.type === 'Point';
+    })
+    .sort((a, b) => parseFloat(a.properties.km) - parseFloat(b.properties.km))
+    .map(f => { const [lng, lat] = f.geometry.coordinates; return new kakao.maps.LatLng(lat, lng); });
+  return pts;
 }
 
-function showKmCircle(km) {
+// 위험도별 색상
+const SEV_COLORS = { danger:'#ef4444', warning:'#f59e0b', info:'#3b82f6', default:'#10b981' };
+
+// 단일 km 포인트 표시 (마커 + 라벨)
+function showKmPoint(km, severity='default', label='') {
   if (!map) return;
   const pos = findCoordByKm(km);
   if (!pos) { toast(`이정 ${km}km 좌표 없음`, 'warn'); return; }
+  const color = SEV_COLORS[severity] || SEV_COLORS.default;
 
   const circle = new kakao.maps.Circle({
-    map, center: pos, radius: 100,
-    strokeWeight: 2, strokeColor: '#10b981', strokeOpacity: .9,
-    fillColor: '#10b981', fillOpacity: .2
+    map, center: pos, radius: 80,
+    strokeWeight: 2, strokeColor: color, strokeOpacity: .9,
+    fillColor: color, fillOpacity: .25
   });
   aiCircles.push(circle);
 
+  const icon = severity==='danger'?'🔴': severity==='warning'?'🟡':'📍';
   const overlay = new kakao.maps.CustomOverlay({
     map, position: pos,
-    content: `<div style="background:rgba(16,185,129,.9);color:#fff;padding:2px 7px;border-radius:4px;font-size:11px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;">${km}km</div>`,
-    yAnchor: 2.5
+    content: `<div style="background:${color};color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.4);">${icon} ${km}km${label?' · '+label:''}</div>`,
+    yAnchor: 2.8
   });
   aiLabels.push(overlay);
 
@@ -743,6 +795,93 @@ function showKmCircle(km) {
   toast(`이정 ${km}km 표시`, 'success');
 }
 
+// km 구간 하이라이트 (폴리라인)
+function showKmRange(kmFrom, kmTo, severity='default', label='') {
+  if (!map) return;
+  const pts = findCoordsInRange(kmFrom, kmTo);
+  if (pts.length < 2) { toast(`구간(${kmFrom}~${kmTo}km) 좌표 부족`, 'warn'); return; }
+  const color = SEV_COLORS[severity] || SEV_COLORS.default;
+
+  const pl = new kakao.maps.Polyline({
+    map, path: pts,
+    strokeWeight: 6, strokeColor: color, strokeOpacity: .75, strokeStyle: 'solid'
+  });
+  aiCircles.push(pl); // 재사용 (clearAIOverlays에서 setMap(null) 처리)
+
+  // 시작/끝 라벨
+  const icon = severity==='danger'?'🔴': severity==='warning'?'🟡':'🔵';
+  [[pts[0], `${icon} ${kmFrom}km`], [pts[pts.length-1], `${icon} ${kmTo}km`]].forEach(([pos, txt]) => {
+    const ov = new kakao.maps.CustomOverlay({
+      map, position: pos,
+      content: `<div style="background:${color};color:#fff;padding:2px 7px;border-radius:4px;font-size:10px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,.4);">${txt}</div>`,
+      yAnchor: 2.5
+    });
+    aiLabels.push(ov);
+  });
+
+  // 구간 중앙에 설명 라벨
+  const mid = pts[Math.floor(pts.length/2)];
+  const midOv = new kakao.maps.CustomOverlay({
+    map, position: mid,
+    content: `<div style="background:rgba(15,23,42,.9);border:1px solid ${color};color:#fff;padding:3px 9px;border-radius:5px;font-size:11px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.5);">${label||`${kmFrom}~${kmTo}km 구간`} · ${(kmTo-kmFrom).toFixed(2)}km</div>`,
+    yAnchor: 3.0
+  });
+  aiLabels.push(midOv);
+
+  // 지도 맞추기
+  const bounds = new kakao.maps.LatLngBounds();
+  pts.forEach(p => bounds.extend(p));
+  map.setBounds(bounds, 60);
+  toast(`${kmFrom}~${kmTo}km 구간 하이라이트 (${pts.length}포인트)`, 'success');
+}
+
+// AI 응답 파싱 후 액션 바 구성
+function buildMapActions(text) {
+  const mentions = parseKmMentions(text);
+  const layers   = extractMentionedLayers(text);
+  const bar      = document.getElementById('map-action-bar');
+  if (!mentions.length && !layers.length) { bar.classList.remove('show'); return; }
+
+  bar.classList.add('show');
+  const sev = detectSeverity(text);
+  const sevClass = `sev-${sev}`;
+  let html = '';
+
+  if (mentions.length) {
+    html += `<div class="map-act-section">📍 위치 표시</div>`;
+    mentions.forEach(m => {
+      if (m.type === 'range') {
+        html += `<button class="map-act-btn ${sevClass}" onclick="showKmRange(${m.from},${m.to},'${sev}')">📏 ${m.from}~${m.to}km</button>`;
+      } else {
+        html += `<button class="map-act-btn ${sevClass}" onclick="showKmPoint(${m.km},'${sev}')">📍 ${m.km}km</button>`;
+      }
+    });
+    if (mentions.length > 1) {
+      // 전체 표시 버튼
+      const allRanges = mentions.filter(m=>m.type==='range').map(m=>`[${m.from},${m.to}]`).join(',');
+      const allPoints = mentions.filter(m=>m.type==='point').map(m=>m.km).join(',');
+      html += `<button class="map-act-btn" onclick="showAllAIResults([${allRanges}],[${allPoints}],'${sev}')">🗺️ 전체 표시</button>`;
+    }
+  }
+
+  if (layers.length) {
+    html += `<div class="map-act-section" style="margin-top:4px">🔲 레이어 추가</div>`;
+    layers.forEach(label => html += `<button class="map-act-btn sev-info" onclick="activateLayerFromAI('${label.replace(/'/g,"\\'")}')">+ ${getLDef(label).name}</button>`);
+  }
+
+  html += `<button class="map-act-btn map-act-del" onclick="clearAIOverlays()">✕ 제거</button>`;
+  document.getElementById('map-action-btns').innerHTML = html;
+}
+
+// 전체 일괄 표시
+function showAllAIResults(ranges, points, severity) {
+  ranges.forEach(r => showKmRange(r[0], r[1], severity));
+  points.forEach(km => showKmPoint(km, severity));
+}
+
+// 하위 호환: 기존 showKmCircle 유지
+function showKmCircle(km) { showKmPoint(km, 'default'); }
+
 function activateLayerFromAI(label) {
   activateLayer(label);
   updateActiveCount();
@@ -750,8 +889,8 @@ function activateLayerFromAI(label) {
 }
 
 function clearAIOverlays() {
-  aiCircles.forEach(c => c.setMap(null));
-  aiLabels.forEach(l => l.setMap(null));
+  aiCircles.forEach(c => { try { c.setMap(null); } catch(e){} });
+  aiLabels.forEach(l => { try { l.setMap(null); } catch(e){} });
   aiCircles = []; aiLabels = [];
   document.getElementById('map-action-bar').classList.remove('show');
 }
@@ -761,7 +900,17 @@ function clearAIOverlays() {
 // ═══════════════════════════════════════════════════════════
 const SYS = `당신은 한국도로공사 정밀도로지도(HD Map) 전문 AI 분석가입니다.
 도로대장 GeoJSON 데이터 기반으로 도로 안전, C-ITS, 유지보수, 교통 흐름 관점에서 전문적 분석을 한국어로 제공합니다.
-분석 결과에 특정 위치를 언급할 때는 반드시 "이정 X.XXkm" 형식으로 명시하세요.`;
+
+[위치 표기 규칙 - 반드시 준수]
+- 단일 지점: "이정 X.XXkm" 형식 (예: 이정 3.45km)
+- 구간: "X.XXkm ~ Y.YYkm" 형식 (예: 5.20km ~ 7.80km)
+- 위험 구간은 반드시 구간 형식으로 표기하세요
+
+[지도 표시 안내]
+분석 결과에 이정(km) 값이 포함되면 우측 채팅 패널 상단에 [AI 결과를 지도에 표시] 버튼이 자동 생성됩니다.
+위험/주의/정보 수준에 따라 빨강/주황/파랑 색상으로 구간이 하이라이트됩니다.
+반드시 구체적인 km 값을 포함하여 지도 반영이 가능하도록 해주세요.`;
+
 
 function setCtx(t) { currentCtx=t; document.getElementById('ctx-txt').textContent=t; document.getElementById('ctx-bar').classList.add('show'); }
 function clearCtx() { currentCtx=null; document.getElementById('ctx-bar').classList.remove('show'); }
