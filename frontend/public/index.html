@@ -245,8 +245,9 @@ body{display:flex;flex-direction:column;}
         <div class="av">🤖</div>
         <div class="mc">
           <strong>정밀도로지도 AI 분석 시스템</strong>입니다.<br><br>
-          📂 GeoJSON 업로드 후 왼쪽 패널에서 레이어를 선택하세요.<br><br>
+          도로대장 데이터를 자동으로 로드합니다.<br><br>
           <strong>기본 표시:</strong> 교량·터널·옹벽·이정(중심)<br><br>
+          새 데이터는 📂 버튼으로 업로드하시면 교체됩니다.<br>
           AI 분석 결과의 이정(km)은 <strong>지도에 표시</strong> 버튼으로 반영됩니다.
         </div>
       </div>
@@ -338,7 +339,7 @@ const KAKAO_KEY = '__KAKAO_KEY__';
 
 function initMap() {
   map = new kakao.maps.Map(document.getElementById('map'), {
-    center: new kakao.maps.LatLng(37.4, 127.2),
+    center: new kakao.maps.LatLng(34.99, 127.54),
     level: 9
   });
   map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
@@ -354,7 +355,54 @@ function initMap() {
   kakao.maps.event.addListener(map, 'click', closeInfo);
   document.getElementById('zoom-badge').textContent = `줌: ${map.getLevel()}`;
   document.getElementById('s-zoom').textContent = map.getLevel();
+
+  // 내장 GeoJSON 자동 로드
+  autoLoadData();
   toast('카카오맵 로드 완료', 'success');
+}
+
+async function autoLoadData() {
+  try {
+    showOv('도로 데이터 로딩 중...', 20);
+    const res = await fetch('/data.geojson');
+    const gj  = await res.json();
+    showOv('레이어 분류 중...', 55);
+
+    clearAllLayers();
+    allFeatures = {};
+    dataStats = gj.metadata?.stats || {};
+
+    gj.features.forEach(f => {
+      const label = f.properties?.label || f.properties?.classId || '기타';
+      if (!allFeatures[label]) allFeatures[label] = [];
+      allFeatures[label].push(f);
+    });
+
+    const total = gj.features.length;
+    document.getElementById('s-total').textContent = total.toLocaleString();
+    document.getElementById('lp-sub').textContent = total.toLocaleString() + '개';
+
+    showOv('패널 구성...', 75);
+    buildLayerPanel();
+
+    showOv('디폴트 레이어 표시...', 88);
+    Object.keys(allFeatures).forEach(label => {
+      if (getLDef(label).default) activateLayer(label);
+    });
+
+    fitAll();
+    updateActiveCount();
+    hideOv();
+
+    const summary = Object.entries(dataStats)
+      .sort((a,b)=>b[1]-a[1]).slice(0,6)
+      .map(([k,v])=>`• ${k}: ${v.toLocaleString()}개`).join('\n');
+    addAI(`📂 **도로대장 데이터 로드 완료** (${total.toLocaleString()}개)\n\n교량·터널·옹벽·이정(중심)이 기본 표시됩니다.\n\n**주요 시설물:**\n${summary}`);
+
+  } catch(e) {
+    hideOv();
+    toast('데이터 로드 실패: ' + e.message, 'error');
+  }
 }
 
 function setMapType(t) {
