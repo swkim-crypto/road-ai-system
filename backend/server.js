@@ -1,30 +1,28 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
-// GeoJSON은 수십MB일 수 있으므로 limit 넉넉하게
 app.use(express.json({ limit: '200mb' }));
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));
-app.use(express.static(path.join(__dirname, '../frontend/public')));
 
-// ── GeoJSON 수신 & 검증
-app.post('/api/load-geojson', (req, res) => {
-  const { geojson } = req.body;
-  if (!geojson || geojson.type !== 'FeatureCollection') {
-    return res.status(400).json({ error: '올바른 GeoJSON FeatureCollection이 아닙니다.' });
-  }
-  const count = geojson.features?.length || 0;
-  const stats = geojson.metadata?.stats || {};
-  res.json({ ok: true, count, stats });
+// ── HTML 서빙: KAKAO_KEY를 직접 삽입
+app.get('/', (req, res) => {
+  const htmlPath = path.join(__dirname, '../frontend/public/index.html');
+  let html = fs.readFileSync(htmlPath, 'utf-8');
+  html = html.replace('__KAKAO_KEY__', process.env.KAKAO_JS_KEY || '');
+  res.send(html);
 });
+
+// ── 정적 파일 (CSS, JS 등)
+app.use(express.static(path.join(__dirname, '../frontend/public')));
 
 // ── Claude API 프록시
 app.post('/api/chat', async (req, res) => {
   const { messages, system } = req.body;
   if (!process.env.ANTHROPIC_API_KEY)
     return res.status(500).json({ error: 'API Key가 서버에 설정되지 않았습니다.' });
-
   try {
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
@@ -51,14 +49,12 @@ app.post('/api/chat', async (req, res) => {
   }
 });
 
-// ── Kakao Key 전달
-app.get('/api/config', (req, res) => {
-  res.json({ kakaoKey: process.env.KAKAO_JS_KEY || '' });
-});
-
 // ── SPA fallback
 app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/public/index.html'));
+  const htmlPath = path.join(__dirname, '../frontend/public/index.html');
+  let html = fs.readFileSync(htmlPath, 'utf-8');
+  html = html.replace('__KAKAO_KEY__', process.env.KAKAO_JS_KEY || '');
+  res.send(html);
 });
 
 const PORT = process.env.PORT || 3000;
