@@ -16,120 +16,143 @@
 body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);height:100vh;overflow:hidden;display:flex;flex-direction:column;}
 
 /* Header */
-.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 16px;height:50px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
-.hdr-l{display:flex;align-items:center;gap:10px;}
-.logo{width:30px;height:30px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:15px;}
-.hdr-title{font-size:14px;font-weight:700;}
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:0 14px;height:48px;background:var(--panel);border-bottom:1px solid var(--border);flex-shrink:0;}
+.hdr-l{display:flex;align-items:center;gap:9px;}
+.logo{width:28px;height:28px;border-radius:7px;background:linear-gradient(135deg,var(--blue),var(--cyan));display:flex;align-items:center;justify-content:center;font-size:14px;}
+.hdr-title{font-size:13px;font-weight:700;}
 .hdr-sub{font-size:10px;color:var(--t3);}
-.hdr-stats{display:flex;gap:16px;}
+.hdr-stats{display:flex;gap:14px;}
 .stat{text-align:right;}
-.stat-v{font-size:13px;font-weight:600;color:var(--cyan);font-family:'JetBrains Mono',monospace;}
-.stat-l{font-size:10px;color:var(--t3);}
-.hdr-btns{display:flex;gap:6px;align-items:center;}
-.btn{padding:5px 11px;border-radius:6px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--t2);font-family:'Noto Sans KR',sans-serif;transition:all .15s;}
+.stat-v{font-size:12px;font-weight:600;color:var(--cyan);font-family:'JetBrains Mono',monospace;}
+.stat-l{font-size:9px;color:var(--t3);}
+.hdr-btns{display:flex;gap:5px;}
+.btn{padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--t2);font-family:'Noto Sans KR',sans-serif;transition:all .15s;}
 .btn:hover{border-color:var(--blue);color:var(--blue);}
 .btn.pri{background:var(--blue);color:#fff;border-color:var(--blue);}
-.btn.pri:hover{background:#2563eb;}
 .btn.danger{border-color:rgba(239,68,68,.4);color:var(--red);}
 .btn.danger:hover{background:rgba(239,68,68,.1);}
 
-/* Main layout */
+/* Main 3-column layout */
 .main{display:flex;flex:1;overflow:hidden;}
-.map-wrap{width:60%;position:relative;background:#1a2332;flex-shrink:0;}
+
+/* ── 왼쪽 레이어 패널 ── */
+.layer-panel{width:200px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.lp-hdr{padding:10px 12px 6px;font-size:11px;font-weight:600;color:var(--t2);border-bottom:1px solid var(--border);flex-shrink:0;}
+.lp-hdr span{color:var(--t3);font-weight:400;font-size:10px;}
+.lp-section{padding:6px 8px 2px;font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;}
+.layer-list{flex:1;overflow-y:auto;padding:0 6px 8px;}
+.layer-list::-webkit-scrollbar{width:3px;}
+.layer-list::-webkit-scrollbar-thumb{background:var(--border);}
+.layer-item{display:flex;align-items:center;gap:7px;padding:5px 6px;border-radius:6px;cursor:pointer;transition:background .12s;margin-bottom:1px;}
+.layer-item:hover{background:var(--card);}
+.layer-item.active{background:rgba(59,130,246,.12);}
+.layer-cb{width:14px;height:14px;border-radius:3px;border:1px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;transition:all .12s;}
+.layer-item.active .layer-cb{background:var(--blue);border-color:var(--blue);}
+.layer-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.layer-info{flex:1;min-width:0;}
+.layer-name{font-size:11px;color:var(--t2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.layer-item.active .layer-name{color:var(--t1);}
+.layer-cnt{font-size:9px;color:var(--t3);font-family:'JetBrains Mono',monospace;}
+.layer-loading{font-size:10px;color:var(--amber);}
+
+/* ── 지도 영역 ── */
+.map-wrap{flex:1;position:relative;background:#1a2332;min-width:0;}
 #map{width:100%;height:100%;}
 
 /* 로딩 오버레이 */
 .overlay{position:absolute;inset:0;background:rgba(10,14,26,.88);display:none;flex-direction:column;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px);}
 .overlay.show{display:flex;}
-.ov-box{background:var(--card);border:1px solid var(--borderB);border-radius:12px;padding:24px 32px;text-align:center;min-width:260px;}
-.ov-title{font-size:14px;font-weight:600;margin-bottom:12px;}
-.ov-bar-wrap{background:var(--panel);border-radius:4px;height:6px;overflow:hidden;margin-bottom:10px;}
+.ov-box{background:var(--card);border:1px solid var(--borderB);border-radius:12px;padding:22px 28px;text-align:center;min-width:240px;}
+.ov-title{font-size:13px;font-weight:600;margin-bottom:10px;}
+.ov-bar-wrap{background:var(--panel);border-radius:4px;height:5px;overflow:hidden;margin-bottom:8px;}
 .ov-bar{height:100%;background:linear-gradient(90deg,var(--blue),var(--cyan));border-radius:4px;transition:width .3s;width:0%;}
-.ov-msg{font-size:12px;color:var(--t2);}
+.ov-msg{font-size:11px;color:var(--t2);}
 
-/* 줌 레벨 표시 */
-.zoom-badge{position:absolute;bottom:50px;left:10px;background:rgba(15,23,42,.92);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:11px;color:var(--t2);z-index:50;font-family:'JetBrains Mono',monospace;backdrop-filter:blur(8px);}
-
-/* 범례 */
-.legend{position:absolute;bottom:80px;left:10px;background:rgba(15,23,42,.92);border:1px solid var(--border);border-radius:10px;padding:10px 13px;backdrop-filter:blur(8px);z-index:50;min-width:160px;max-height:260px;overflow-y:auto;}
-.legend::-webkit-scrollbar{width:3px;}
-.legend::-webkit-scrollbar-thumb{background:var(--border);}
-.leg-title{font-size:10px;color:var(--t3);margin-bottom:7px;text-transform:uppercase;letter-spacing:.5px;}
-.leg-item{display:flex;align-items:center;gap:7px;margin-bottom:4px;font-size:11px;color:var(--t2);cursor:pointer;user-select:none;}
-.leg-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
-.leg-item.off .leg-dot,.leg-item.off span{opacity:.3;}
+/* 줌 배지 */
+.zoom-badge{position:absolute;bottom:30px;left:10px;background:rgba(15,23,42,.9);border:1px solid var(--border);border-radius:5px;padding:3px 8px;font-size:10px;color:var(--t3);z-index:50;font-family:'JetBrains Mono',monospace;}
 
 /* 객체 정보 팝업 */
-.info-pop{position:absolute;top:10px;right:10px;background:rgba(15,23,42,.96);border:1px solid var(--borderB);border-radius:10px;padding:12px 15px;z-index:50;min-width:210px;max-width:250px;display:none;backdrop-filter:blur(8px);}
+.info-pop{position:absolute;top:10px;right:10px;background:rgba(15,23,42,.97);border:1px solid var(--borderB);border-radius:10px;padding:12px 14px;z-index:50;min-width:200px;max-width:240px;display:none;backdrop-filter:blur(8px);}
 .info-pop.show{display:block;}
-.info-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.info-ttl{font-size:13px;font-weight:600;}
-.info-x{cursor:pointer;color:var(--t3);font-size:18px;line-height:1;}
+.info-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;}
+.info-ttl{font-size:12px;font-weight:600;}
+.info-x{cursor:pointer;color:var(--t3);font-size:17px;line-height:1;}
 .info-row{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid var(--border);}
 .info-row:last-child{border:none;}
-.info-k{font-size:11px;color:var(--t3);}
-.info-v{font-size:11px;color:var(--t2);font-family:'JetBrains Mono',monospace;}
-.ai-btn{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:5px;font-size:11px;cursor:pointer;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:var(--cyan);margin-top:8px;font-family:'Noto Sans KR',sans-serif;transition:all .15s;}
+.info-k{font-size:10px;color:var(--t3);}
+.info-v{font-size:10px;color:var(--t2);font-family:'JetBrains Mono',monospace;}
+.ai-btn{display:inline-flex;align-items:center;gap:4px;padding:4px 9px;border-radius:5px;font-size:11px;cursor:pointer;background:rgba(6,182,212,.15);border:1px solid rgba(6,182,212,.3);color:var(--cyan);margin-top:7px;font-family:'Noto Sans KR',sans-serif;transition:all .15s;}
 .ai-btn:hover{background:rgba(6,182,212,.25);}
 
-/* 분할선 */
-.dvd{width:3px;background:var(--border);cursor:col-resize;flex-shrink:0;transition:background .15s;}
-.dvd:hover{background:var(--blue);}
-
-/* 채팅 패널 */
-.chat{flex:1;display:flex;flex-direction:column;background:var(--bg2);overflow:hidden;}
-.chat-hdr{padding:10px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.chat-ttl{font-size:13px;font-weight:600;display:flex;align-items:center;gap:7px;}
-.dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 2s infinite;}
+/* ── 오른쪽 AI 패널 ── */
+.chat{width:320px;flex-shrink:0;display:flex;flex-direction:column;background:var(--bg2);border-left:1px solid var(--border);overflow:hidden;}
+.chat-hdr{padding:9px 13px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.chat-ttl{font-size:12px;font-weight:600;display:flex;align-items:center;gap:6px;}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green);animation:pulse 2s infinite;}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-.badge{font-size:10px;padding:2px 7px;border-radius:4px;background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3);font-family:'JetBrains Mono',monospace;}
-.srv-bar{padding:6px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--panel);flex-shrink:0;font-size:11px;color:var(--t3);}
-.ctx-bar{padding:5px 12px;border-bottom:1px solid var(--border);background:rgba(59,130,246,.05);flex-shrink:0;display:none;align-items:center;gap:7px;}
+.badge{font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(59,130,246,.15);color:var(--blue);border:1px solid rgba(59,130,246,.3);font-family:'JetBrains Mono',monospace;}
+.srv-bar{padding:5px 11px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;background:var(--panel);flex-shrink:0;font-size:10px;color:var(--t3);}
+
+/* 컨텍스트 바 */
+.ctx-bar{padding:4px 11px;border-bottom:1px solid var(--border);background:rgba(59,130,246,.05);flex-shrink:0;display:none;align-items:center;gap:6px;}
 .ctx-bar.show{display:flex;}
-.ctx-lbl{font-size:11px;color:var(--blue);}
-.ctx-txt{font-size:11px;color:var(--t2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.ctx-x{font-size:11px;color:var(--t3);cursor:pointer;}
+.ctx-lbl{font-size:10px;color:var(--blue);}
+.ctx-txt{font-size:10px;color:var(--t2);flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.ctx-x{font-size:10px;color:var(--t3);cursor:pointer;}
 .ctx-x:hover{color:var(--red);}
-.quick{padding:7px 12px;border-bottom:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;flex-shrink:0;}
-.qbtn{padding:3px 9px;border-radius:16px;font-size:11px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--t2);font-family:'Noto Sans KR',sans-serif;transition:all .15s;white-space:nowrap;}
+
+/* AI 지도 반영 바 */
+.map-action-bar{padding:6px 11px;border-bottom:1px solid var(--border);background:rgba(16,185,129,.05);flex-shrink:0;display:none;flex-direction:column;gap:5px;}
+.map-action-bar.show{display:flex;}
+.map-action-title{font-size:10px;color:var(--green);}
+.map-action-btns{display:flex;gap:5px;flex-wrap:wrap;}
+.map-act-btn{padding:3px 8px;border-radius:4px;font-size:10px;cursor:pointer;border:1px solid rgba(16,185,129,.3);background:rgba(16,185,129,.1);color:var(--green);font-family:'Noto Sans KR',sans-serif;transition:all .15s;}
+.map-act-btn:hover{background:rgba(16,185,129,.2);}
+
+/* 빠른 질문 */
+.quick{padding:6px 10px;border-bottom:1px solid var(--border);display:flex;gap:4px;flex-wrap:wrap;flex-shrink:0;}
+.qbtn{padding:3px 8px;border-radius:14px;font-size:10px;cursor:pointer;border:1px solid var(--border);background:var(--card);color:var(--t2);font-family:'Noto Sans KR',sans-serif;transition:all .15s;white-space:nowrap;}
 .qbtn:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(6,182,212,.08);}
-.msgs{flex:1;overflow-y:auto;padding:14px 12px;display:flex;flex-direction:column;gap:10px;}
+
+/* 메시지 */
+.msgs{flex:1;overflow-y:auto;padding:12px 10px;display:flex;flex-direction:column;gap:9px;}
 .msgs::-webkit-scrollbar{width:3px;}
 .msgs::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px;}
-.msg{display:flex;gap:8px;animation:fi .2s ease;}
-@keyframes fi{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.msg{display:flex;gap:7px;animation:fi .2s ease;}
+@keyframes fi{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
 .msg.user{flex-direction:row-reverse;}
-.av{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;margin-top:2px;}
+.av{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;flex-shrink:0;margin-top:2px;}
 .msg.user .av{background:var(--blue);color:#fff;}
 .msg.assistant .av{background:linear-gradient(135deg,#1e3a5f,#1e4d7b);color:var(--cyan);border:1px solid var(--borderB);}
-.mc{max-width:86%;padding:9px 12px;border-radius:10px;font-size:13px;line-height:1.6;}
-.msg.user .mc{background:rgba(59,130,246,.18);border:1px solid rgba(59,130,246,.25);border-radius:10px 3px 10px 10px;}
-.msg.assistant .mc{background:var(--card);border:1px solid var(--border);color:var(--t2);border-radius:3px 10px 10px 10px;}
+.mc{max-width:88%;padding:8px 11px;border-radius:9px;font-size:12px;line-height:1.6;}
+.msg.user .mc{background:rgba(59,130,246,.18);border:1px solid rgba(59,130,246,.25);border-radius:9px 3px 9px 9px;}
+.msg.assistant .mc{background:var(--card);border:1px solid var(--border);color:var(--t2);border-radius:3px 9px 9px 9px;}
 .mc strong{color:var(--t1);}
-.mc code{font-family:'JetBrains Mono',monospace;font-size:11px;background:rgba(0,0,0,.3);padding:1px 5px;border-radius:3px;color:var(--cyan);}
-.typing{display:flex;gap:4px;padding:6px 0;}
-.td{width:7px;height:7px;border-radius:50%;background:var(--blue);opacity:.6;animation:ty 1.2s infinite;}
+.mc code{font-family:'JetBrains Mono',monospace;font-size:10px;background:rgba(0,0,0,.3);padding:1px 4px;border-radius:3px;color:var(--cyan);}
+.typing{display:flex;gap:4px;padding:5px 0;}
+.td{width:6px;height:6px;border-radius:50%;background:var(--blue);opacity:.6;animation:ty 1.2s infinite;}
 .td:nth-child(2){animation-delay:.2s}.td:nth-child(3){animation-delay:.4s}
-@keyframes ty{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px);opacity:1}}
-.inp-area{padding:10px 12px;border-top:1px solid var(--border);background:var(--panel);flex-shrink:0;}
-.inp-wrap{display:flex;background:var(--card);border:1px solid var(--border);border-radius:9px;overflow:hidden;transition:border-color .15s;}
+@keyframes ty{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px);opacity:1}}
+
+/* 입력 영역 */
+.inp-area{padding:9px 10px;border-top:1px solid var(--border);background:var(--panel);flex-shrink:0;}
+.inp-wrap{display:flex;background:var(--card);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .15s;}
 .inp-wrap:focus-within{border-color:var(--blue);}
-#cinput{flex:1;padding:9px 13px;background:transparent;border:none;color:var(--t1);font-size:13px;outline:none;resize:none;font-family:'Noto Sans KR',sans-serif;line-height:1.5;max-height:110px;}
+#cinput{flex:1;padding:8px 11px;background:transparent;border:none;color:var(--t1);font-size:12px;outline:none;resize:none;font-family:'Noto Sans KR',sans-serif;line-height:1.5;max-height:100px;}
 #cinput::placeholder{color:var(--t3);}
-.sbtn{width:38px;margin:5px;border-radius:6px;background:var(--blue);border:none;cursor:pointer;color:#fff;font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
+.sbtn{width:34px;margin:4px;border-radius:6px;background:var(--blue);border:none;cursor:pointer;color:#fff;font-size:14px;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;}
 .sbtn:hover{background:#2563eb;}
 .sbtn:disabled{background:var(--card);color:var(--t3);cursor:not-allowed;}
-.inp-ft{display:flex;justify-content:space-between;margin-top:5px;padding:0 2px;}
-.inp-hint{font-size:10px;color:var(--t3);}
-.finfo{font-size:10px;color:var(--cyan);}
-.toast{position:fixed;bottom:18px;right:18px;z-index:9999;background:rgba(15,23,42,.95);border-radius:8px;padding:9px 14px;font-size:12px;color:var(--t1);font-family:'Noto Sans KR',sans-serif;max-width:300px;backdrop-filter:blur(8px);animation:fi .2s ease;}
+.inp-ft{display:flex;justify-content:space-between;margin-top:4px;padding:0 1px;}
+.inp-hint{font-size:9px;color:var(--t3);}
+.finfo{font-size:9px;color:var(--cyan);}
 
-/* 카카오 클러스터 스타일 오버라이드 */
-.cluster-marker{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;cursor:pointer;border:2px solid rgba(255,255,255,.4);}
+.toast{position:fixed;bottom:16px;right:16px;z-index:9999;background:rgba(15,23,42,.95);border-radius:7px;padding:8px 13px;font-size:11px;color:var(--t1);font-family:'Noto Sans KR',sans-serif;max-width:280px;backdrop-filter:blur(8px);animation:fi .2s ease;}
 </style>
 </head>
 <body>
 
+<!-- Header -->
 <div class="hdr">
   <div class="hdr-l">
     <div class="logo">🛣️</div>
@@ -140,7 +163,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
   </div>
   <div class="hdr-stats">
     <div class="stat"><div class="stat-v" id="s-total">0</div><div class="stat-l">총 객체</div></div>
-    <div class="stat"><div class="stat-v" id="s-vis">0</div><div class="stat-l">화면 표시</div></div>
+    <div class="stat"><div class="stat-v" id="s-active">0</div><div class="stat-l">표시 중</div></div>
     <div class="stat"><div class="stat-v" id="s-zoom">-</div><div class="stat-l">줌 레벨</div></div>
   </div>
   <div class="hdr-btns">
@@ -153,7 +176,19 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 <input type="file" id="file-input" accept=".geojson,.json" style="display:none" onchange="loadGeoJSON(this)">
 
 <div class="main">
-  <div class="map-wrap" id="map-wrap">
+
+  <!-- 왼쪽: 레이어 패널 -->
+  <div class="layer-panel">
+    <div class="lp-hdr">레이어 컨트롤 <span id="lp-loaded">· 미로드</span></div>
+    <div class="layer-list" id="layer-list">
+      <div style="padding:12px 6px;font-size:11px;color:var(--t3);line-height:1.6">
+        GeoJSON 업로드 후<br>레이어 목록이 표시됩니다.
+      </div>
+    </div>
+  </div>
+
+  <!-- 가운데: 지도 -->
+  <div class="map-wrap">
     <div id="map"></div>
 
     <div class="overlay" id="overlay">
@@ -166,11 +201,6 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 
     <div class="zoom-badge" id="zoom-badge">줌: -</div>
 
-    <div class="legend">
-      <div class="leg-title">레이어</div>
-      <div id="legend-items"><div style="font-size:11px;color:var(--t3)">GeoJSON 업로드 후 표시</div></div>
-    </div>
-
     <div class="info-pop" id="info-pop">
       <div class="info-hdr">
         <span class="info-ttl" id="info-ttl">객체 정보</span>
@@ -181,8 +211,7 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
     </div>
   </div>
 
-  <div class="dvd" id="dvd"></div>
-
+  <!-- 오른쪽: AI 채팅 -->
   <div class="chat">
     <div class="chat-hdr">
       <div class="chat-ttl"><div class="dot"></div>AI 도로 분석</div>
@@ -192,35 +221,41 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
       <span>🔒 API Key 서버 보관</span>
       <span id="srv-status" style="color:var(--amber)">확인 중...</span>
     </div>
+
     <div class="ctx-bar" id="ctx-bar">
       <span class="ctx-lbl">📍</span>
       <span class="ctx-txt" id="ctx-txt"></span>
       <span class="ctx-x" onclick="clearCtx()">✕</span>
     </div>
-    <div class="quick">
-      <button class="qbtn" onclick="sq('업로드한 도로 데이터의 시설물 종류와 분포 특성을 분석해주세요')">📋 전체 현황</button>
-      <button class="qbtn" onclick="sq('VMS와 DSRC 위치를 분석하고 C-ITS 관점에서 해석해주세요')">📡 C-ITS</button>
-      <button class="qbtn" onclick="sq('도로 안전 관점에서 취약 구간을 분석하고 개선 방안을 제안해주세요')">⚠️ 안전 분석</button>
-      <button class="qbtn" onclick="sq('CCTV와 가로등 분포로 야간 도로 안전성을 평가해주세요')">🌙 야간 안전</button>
-      <button class="qbtn" onclick="sq('이 도로 구간의 시설물 현황을 종합 요약해주세요')">📊 종합 요약</button>
+
+    <!-- AI → 지도 반영 액션 바 -->
+    <div class="map-action-bar" id="map-action-bar">
+      <div class="map-action-title">🗺️ AI 분석 결과를 지도에 표시</div>
+      <div class="map-action-btns" id="map-action-btns"></div>
     </div>
+
+    <div class="quick">
+      <button class="qbtn" onclick="sq('교량과 터널의 분포 현황과 도로 구조적 특성을 분석해주세요')">🌉 교량/터널</button>
+      <button class="qbtn" onclick="sq('VMS와 DSRC 위치를 분석하고 C-ITS 관점에서 해석해주세요')">📡 C-ITS</button>
+      <button class="qbtn" onclick="sq('도로 안전 취약 구간을 이정(km) 기준으로 분석해주세요')">⚠️ 안전</button>
+      <button class="qbtn" onclick="sq('현재 표시된 레이어 데이터를 종합 요약해주세요')">📊 종합</button>
+    </div>
+
     <div class="msgs" id="msgs">
       <div class="msg assistant">
         <div class="av">🤖</div>
         <div class="mc">
-          안녕하세요! <strong>정밀도로지도 AI 분석 시스템</strong>입니다.<br><br>
-          <strong>사용 순서:</strong><br>
-          1️⃣ 코랩에서 TTL → GeoJSON 변환<br>
-          2️⃣ <strong>📂 GeoJSON 업로드</strong> 버튼으로 파일 업로드<br>
-          3️⃣ 지도 줌인/아웃으로 데이터 탐색<br>
-          4️⃣ 객체 클릭 → AI 분석 요청<br><br>
-          <strong>줌 레벨에 따라 자동으로 클러스터 ↔ 개별 마커가 전환됩니다.</strong>
+          <strong>정밀도로지도 AI 분석 시스템</strong>입니다.<br><br>
+          📂 GeoJSON 업로드 후 왼쪽 패널에서 레이어를 선택하세요.<br><br>
+          <strong>디폴트 표시:</strong> 교량·터널·옹벽·이정(중심)<br><br>
+          AI 분석 결과의 이정(km) 위치는 <strong>지도에 표시</strong> 버튼으로 반영할 수 있습니다.
         </div>
       </div>
     </div>
+
     <div class="inp-area">
       <div class="inp-wrap">
-        <textarea id="cinput" placeholder="도로 데이터에 대해 질문하세요... (Enter 전송)" rows="1"
+        <textarea id="cinput" placeholder="도로 데이터에 대해 질문하세요..." rows="1"
           onkeydown="onKey(event)" oninput="resize(this)"></textarea>
         <button class="sbtn" id="sbtn" onclick="send()">➤</button>
       </div>
@@ -236,41 +271,64 @@ body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);color:var(--t1);
 'use strict';
 
 // ═══════════════════════════════════════════════════════════
+// 레이어 정의
+// ═══════════════════════════════════════════════════════════
+const LAYER_DEFS = {
+  // key: GeoJSON label 또는 classId 매칭 키워드
+  // default: 기본 표시 여부
+  // color, name, maxDisplay
+  '차도구간(교량)':        { name:'교량',        color:'#3b82f6', default:true,  maxDisplay:500  },
+  '차도구간(터널)':        { name:'터널',        color:'#8b5cf6', default:true,  maxDisplay:500  },
+  '벽/휀스(옹벽)':        { name:'옹벽',        color:'#f97316', default:true,  maxDisplay:1000 },
+  '이정(중심,연결로)':     { name:'이정(중심)',  color:'#10b981', default:true,  maxDisplay:2000 },
+  '이정(갓길이정)':        { name:'이정(갓길)',  color:'#84cc16', default:false, maxDisplay:3000 },
+  '주행경로노드':          { name:'주행경로노드',color:'#06b6d4', default:false, maxDisplay:1000 },
+  '주행경로링크':          { name:'주행경로링크',color:'#a78bfa', default:false, maxDisplay:500  },
+  '도로전광표지(VMS)':     { name:'VMS',         color:'#f59e0b', default:false, maxDisplay:200  },
+  'DSRC':                  { name:'DSRC',        color:'#ef4444', default:false, maxDisplay:200  },
+  'CCTV':                  { name:'CCTV',        color:'#f97316', default:false, maxDisplay:500  },
+  '가로등':                { name:'가로등',      color:'#fbbf24', default:false, maxDisplay:2000 },
+  '교통안전표지':          { name:'교통안전표지',color:'#ec4899', default:false, maxDisplay:1000 },
+  '노면선표시':            { name:'노면선표시',  color:'#64748b', default:false, maxDisplay:500  },
+  '노면안내표시':          { name:'노면안내표시',color:'#94a3b8', default:false, maxDisplay:500  },
+  '도로안내표지':          { name:'도로안내표지',color:'#fb923c', default:false, maxDisplay:500  },
+  '차량방호안전시설(중앙분리대)':{ name:'중앙분리대', color:'#6366f1', default:false, maxDisplay:500 },
+  '차량방호안전시설(방호울타리)':{ name:'방호울타리', color:'#7c3aed', default:false, maxDisplay:500 },
+  '충격흡수시설':          { name:'충격흡수',    color:'#dc2626', default:false, maxDisplay:300  },
+  '과속방지턱':            { name:'과속방지턱',  color:'#d97706', default:false, maxDisplay:300  },
+  '도로대장 총괄':         { name:'도로대장',    color:'#0891b2', default:false, maxDisplay:500  },
+  '도로중심선교점':        { name:'중심선교점',  color:'#0d9488', default:false, maxDisplay:500  },
+  '요금소':                { name:'요금소',      color:'#7c3aed', default:false, maxDisplay:100  },
+  '차로신호제어기(LCS)':   { name:'LCS',         color:'#2563eb', default:false, maxDisplay:200  },
+  '긴급전화':              { name:'긴급전화',    color:'#dc2626', default:false, maxDisplay:200  },
+  '차량검지기(VDS)':       { name:'VDS',         color:'#0891b2', default:false, maxDisplay:200  },
+  '제설시설':              { name:'제설시설',    color:'#7dd3fc', default:false, maxDisplay:300  },
+  '생태통로':              { name:'생태통로',    color:'#4ade80', default:false, maxDisplay:100  },
+};
+const DEF_LAYER = { name:'기타', color:'#64748b', default:false, maxDisplay:500 };
+
+// 줌 레벨별 샘플링 비율 (객체수가 많을 때)
+function getSampleRate(zoom, count) {
+  if (count < 500) return 1;
+  if (zoom >= 10) return count > 2000 ? 0.1 : 0.33;
+  if (zoom >= 8)  return count > 2000 ? 0.33 : 0.5;
+  return 1; // 줌 7 이하: 전부
+}
+
+// ═══════════════════════════════════════════════════════════
 // 전역 상태
 // ═══════════════════════════════════════════════════════════
 let map = null;
-let allFeatures = [];      // 전체 GeoJSON features (메모리에만, 지도 객체 아님)
-let dataStats = {};
+let markerCache = {};          // color → MarkerImage
+let allFeatures = {};          // label → features[]  (메모리)
+let dataStats = {};            // label → count
+let layerState = {};           // label → { active, kakaoObjs[] }
+let aiCircles = [];            // AI 결과 원
+let aiMarkers = [];            // AI 결과 마커
 let selectedF = null;
 let chatHistory = [];
 let currentCtx = null;
-
-// 지도 객체 관리
-let clusterer = null;      // 카카오 클러스터러
-let visibleMarkers = [];   // 현재 지도에 올라간 마커
-let visiblePolylines = []; // 현재 지도에 올라간 폴리라인
-let visiblePolygons = [];  // 현재 지도에 올라간 폴리곤
-let markerCache = {};      // color → MarkerImage 캐시
-
-// 레이어 가시성 (label 단위)
-let layerVis = {};         // label → bool (기본 true)
-
-// 줌 레벨 임계값
-// 줌 9 이상(멀리): 클러스터만
-// 줌 8 이하(가까이): 현재 뷰포트 안 개별 마커 + 선/면
-const CLUSTER_ZOOM = 9;
-const MAX_VIEWPORT_MARKERS = 2000; // 뷰포트 내 최대 마커 수
-
-// 클래스별 색상
-const CLASS_COLOR = {
-  Class_001:'#3b82f6', Class_002:'#8b5cf6', Class_010:'#f59e0b',
-  Class_021:'#f59e0b', Class_022:'#10b981', Class_037:'#f97316',
-  Class_038:'#fbbf24', Class_044:'#ef4444', Class_046:'#06b6d4',
-  Class_047:'#84cc16', Class_061:'#ec4899', Class_062:'#a78bfa',
-  Class_063:'#84cc16', Class_025:'#fb923c', Class_024:'#fb923c',
-};
-const DEF_COLOR = '#94a3b8';
-const getColor = cid => CLASS_COLOR[cid] || DEF_COLOR;
+let lastAIResponse = '';
 
 // ═══════════════════════════════════════════════════════════
 // 지도 초기화
@@ -282,65 +340,18 @@ function initMap() {
   });
   map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
   map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
-
-  // 클러스터러 초기화
-  clusterer = new kakao.maps.MarkerClusterer({
-    map,
-    averageCenter: true,
-    minLevel: CLUSTER_ZOOM,   // 이 레벨 이상에서만 클러스터 활성
-    disableClickZoom: false,
-    styles: [{
-      width:'40px', height:'40px',
-      background:'rgba(59,130,246,.85)',
-      borderRadius:'50%',
-      color:'#fff',
-      textAlign:'center',
-      lineHeight:'40px',
-      fontSize:'13px',
-      fontWeight:'700',
-      border:'2px solid rgba(255,255,255,.5)'
-    },{
-      width:'50px', height:'50px',
-      background:'rgba(239,68,68,.85)',
-      borderRadius:'50%',
-      color:'#fff',
-      textAlign:'center',
-      lineHeight:'50px',
-      fontSize:'14px',
-      fontWeight:'700',
-      border:'2px solid rgba(255,255,255,.5)'
-    },{
-      width:'60px', height:'60px',
-      background:'rgba(245,158,11,.85)',
-      borderRadius:'50%',
-      color:'#fff',
-      textAlign:'center',
-      lineHeight:'60px',
-      fontSize:'15px',
-      fontWeight:'700',
-      border:'2px solid rgba(255,255,255,.5)'
-    }]
-  });
-
-  // 줌 변경 이벤트 → 뷰포트 렌더링 갱신
-  kakao.maps.event.addListener(map, 'zoom_changed', onMapChange);
-  // 드래그 종료 이벤트 → 뷰포트 렌더링 갱신
-  kakao.maps.event.addListener(map, 'dragend', onMapChange);
-  // 클릭 → 팝업 닫기
+  kakao.maps.event.addListener(map, 'zoom_changed', onZoomChange);
   kakao.maps.event.addListener(map, 'click', closeInfo);
-
   updateZoomBadge();
-  toast('지도 로드 완료. GeoJSON 파일을 업로드하세요.', 'info');
+  toast('지도 로드 완료', 'info');
 }
 
 function showPlaceholder() {
   const el = document.getElementById('map');
   el.style.cssText = 'display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:#0f172a;';
-  el.innerHTML = `<div style="font-size:36px">🗺️</div>
-    <div style="font-size:14px;font-weight:600">카카오맵 API Key 필요</div>
-    <div style="font-size:12px;color:#94a3b8;text-align:center;line-height:1.8">
-      환경변수 KAKAO_JS_KEY 설정 필요<br>AI 채팅은 오른쪽에서 사용 가능
-    </div>`;
+  el.innerHTML = `<div style="font-size:32px">🗺️</div>
+    <div style="font-size:13px;font-weight:600">카카오맵 API Key 필요</div>
+    <div style="font-size:11px;color:#94a3b8;text-align:center;line-height:1.8">환경변수 KAKAO_JS_KEY 설정 필요</div>`;
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -352,274 +363,404 @@ function loadGeoJSON(input) {
   const file = input.files[0];
   if (!file) return;
   input.value = '';
-
-  showOv('GeoJSON 파일 읽는 중...', 10);
+  showOv('GeoJSON 읽는 중...', 15);
 
   const reader = new FileReader();
   reader.onload = (e) => {
     try {
-      showOv('JSON 파싱 중...', 30);
-      const geojson = JSON.parse(e.target.result);
+      showOv('파싱 중...', 35);
+      const gj = JSON.parse(e.target.result);
+      if (gj.type !== 'FeatureCollection') throw new Error('FeatureCollection 형식 아님');
 
-      if (geojson.type !== 'FeatureCollection')
-        throw new Error('GeoJSON FeatureCollection 형식이 아닙니다.');
+      showOv('레이어 분류 중...', 60);
 
-      allFeatures = geojson.features || [];
-      dataStats = geojson.metadata?.stats || {};
-      layerVis = {};  // 레이어 가시성 초기화
+      // 레이블별로 분류
+      allFeatures = {};
+      dataStats = gj.metadata?.stats || {};
 
-      showOv('데이터 인덱싱 중...', 60);
+      gj.features.forEach(f => {
+        const label = f.properties?.label || f.properties?.classId || '기타';
+        if (!allFeatures[label]) allFeatures[label] = [];
+        allFeatures[label].push(f);
+      });
 
-      // 기존 지도 객체 제거
-      clearMapObjects();
+      const total = gj.features.length;
+      document.getElementById('s-total').textContent = total.toLocaleString();
+      document.getElementById('lp-loaded').textContent = `· ${total.toLocaleString()}개`;
 
-      showOv('클러스터 구성 중...', 80);
+      showOv('레이어 패널 구성 중...', 80);
+      buildLayerPanel();
 
-      // 클러스터러에 전체 포인트 등록 (DOM 객체 최소화)
-      buildClusterer();
+      showOv('디폴트 레이어 표시 중...', 90);
+      // 디폴트 레이어 활성화
+      Object.keys(allFeatures).forEach(label => {
+        const def = getLayerDef(label);
+        if (def.default) activateLayer(label);
+      });
 
-      showOv('완료', 100);
-      setTimeout(() => {
-        hideOv();
-        // 현재 줌에 맞게 뷰포트 렌더링
-        onMapChange();
-        buildLegend();
-        updateStats();
-        fitAll();
+      fitAll();
+      hideOv();
+      updateActiveCount();
 
-        const summary = Object.entries(dataStats)
-          .sort((a,b)=>b[1]-a[1]).slice(0,8)
-          .map(([k,v])=>`• ${k}: ${v.toLocaleString()}개`).join('\n');
-        addAI(`📂 **GeoJSON 로드 완료**\n\n총 **${allFeatures.length.toLocaleString()}개** 객체\n\n**시설물 현황:**\n${summary}\n\n줌인하면 개별 객체가 표시됩니다.`);
-        toast(`✅ ${allFeatures.length.toLocaleString()}개 객체 로드 완료`, 'success');
-      }, 100);
+      const summary = Object.entries(dataStats)
+        .sort((a,b)=>b[1]-a[1]).slice(0,6)
+        .map(([k,v])=>`• ${k}: ${v.toLocaleString()}개`).join('\n');
+      addAI(`📂 **GeoJSON 로드 완료** (${total.toLocaleString()}개)\n\n교량·터널·옹벽·이정(중심)이 기본 표시됩니다.\n왼쪽 패널에서 추가 레이어를 선택하세요.\n\n**주요 시설물:**\n${summary}`);
+      toast(`✅ ${total.toLocaleString()}개 로드 완료`, 'success');
 
-    } catch (err) {
+    } catch(err) {
       hideOv();
       toast('로드 실패: ' + err.message, 'error');
-      console.error(err);
     }
   };
   reader.readAsText(file, 'utf-8');
 }
 
 // ═══════════════════════════════════════════════════════════
-// 클러스터러 구성 (포인트만 - 경량 마커 사용)
-// 클러스터러는 항상 전체 포인트를 가지고 있고
-// 줌 레벨에 따라 카카오가 자동으로 클러스터/개별 전환
+// 레이어 패널
 // ═══════════════════════════════════════════════════════════
-function buildClusterer() {
-  if (!clusterer) return;
-  clusterer.clear();
-  markerCache = {};
-
-  const clusterMarkers = [];
-
-  allFeatures.forEach(f => {
-    if (!f.geometry) return;
-    const label = f.properties?.label || f.properties?.classId || '기타';
-    if (layerVis[label] === false) return;
-
-    const type = f.geometry.type;
-    if (type === 'Point' || type === 'MultiPoint') {
-      const coords = type === 'Point' ? f.geometry.coordinates : f.geometry.coordinates[0];
-      const [lng, lat] = coords;
-      if (!isFinite(lat) || !isFinite(lng)) return;
-
-      const color = getColor(f.properties?.classId);
-      const m = makeClusterMarker(lat, lng, color, f);
-      if (m) clusterMarkers.push(m);
-    }
-  });
-
-  clusterer.addMarkers(clusterMarkers);
+function getLayerDef(label) {
+  return LAYER_DEFS[label] || DEF_LAYER;
 }
 
-function makeClusterMarker(lat, lng, color, f) {
-  // 색상별 마커 이미지 캐시
+function buildLayerPanel() {
+  const container = document.getElementById('layer-list');
+  // 디폴트 레이어 먼저, 나머지 뒤
+  const labels = Object.keys(allFeatures);
+  const defaults = labels.filter(l => getLayerDef(l).default);
+  const others   = labels.filter(l => !getLayerDef(l).default);
+
+  let html = '';
+  if (defaults.length) {
+    html += `<div class="lp-section">기본 레이어</div>`;
+    defaults.forEach(label => html += layerItemHTML(label));
+  }
+  if (others.length) {
+    html += `<div class="lp-section" style="margin-top:6px">선택 레이어</div>`;
+    others.forEach(label => html += layerItemHTML(label));
+  }
+  container.innerHTML = html;
+}
+
+function layerItemHTML(label) {
+  const def = getLayerDef(label);
+  const cnt = (allFeatures[label]||[]).length;
+  const id = 'li_' + label.replace(/[^a-zA-Z0-9가-힣]/g,'_');
+  return `<div class="layer-item" id="${id}" onclick="toggleLayer('${label.replace(/'/g,"\\'")}')">
+    <div class="layer-cb"></div>
+    <div class="layer-dot" style="background:${def.color}"></div>
+    <div class="layer-info">
+      <div class="layer-name" title="${label}">${def.name || label}</div>
+      <div class="layer-cnt">${cnt.toLocaleString()}개</div>
+    </div>
+  </div>`;
+}
+
+function toggleLayer(label) {
+  if (layerState[label]?.active) {
+    deactivateLayer(label);
+  } else {
+    activateLayer(label);
+  }
+  updateLayerUI(label);
+  updateActiveCount();
+}
+
+// ═══════════════════════════════════════════════════════════
+// 레이어 활성화 / 비활성화
+// ═══════════════════════════════════════════════════════════
+function activateLayer(label) {
+  if (!map) return;
+  if (!allFeatures[label]) return;
+
+  const def = getLayerDef(label);
+  const features = allFeatures[label];
+  const zoom = map.getLevel();
+  const rate = getSampleRate(zoom, features.length);
+  const step = Math.max(1, Math.round(1 / rate));
+
+  const objs = [];
+  for (let i = 0; i < features.length; i += step) {
+    const obj = renderFeature(features[i], def.color);
+    if (obj) objs.push(obj);
+  }
+
+  layerState[label] = { active: true, kakaoObjs: objs, features };
+  updateLayerUI(label);
+}
+
+function deactivateLayer(label) {
+  const state = layerState[label];
+  if (!state) return;
+  state.kakaoObjs.forEach(obj => { try { obj.setMap(null); } catch(e){} });
+  layerState[label] = { active: false, kakaoObjs: [], features: state.features };
+  updateLayerUI(label);
+}
+
+function updateLayerUI(label) {
+  const id = 'li_' + label.replace(/[^a-zA-Z0-9가-힣]/g,'_');
+  const el = document.getElementById(id);
+  if (!el) return;
+  const active = layerState[label]?.active;
+  el.classList.toggle('active', !!active);
+  el.querySelector('.layer-cb').textContent = active ? '✓' : '';
+}
+
+// 줌 변경 시 대용량 레이어 재샘플링
+function onZoomChange() {
+  updateZoomBadge();
+  Object.entries(layerState).forEach(([label, state]) => {
+    if (!state.active) return;
+    const features = state.features || allFeatures[label] || [];
+    if (features.length < 500) return; // 소용량은 재샘플링 불필요
+    // 기존 객체 제거 후 재렌더
+    state.kakaoObjs.forEach(obj => { try { obj.setMap(null); } catch(e){} });
+    const def = getLayerDef(label);
+    const zoom = map.getLevel();
+    const rate = getSampleRate(zoom, features.length);
+    const step = Math.max(1, Math.round(1 / rate));
+    const objs = [];
+    for (let i = 0; i < features.length; i += step) {
+      const obj = renderFeature(features[i], def.color);
+      if (obj) objs.push(obj);
+    }
+    state.kakaoObjs = objs;
+  });
+  updateActiveCount();
+}
+
+// ═══════════════════════════════════════════════════════════
+// 피처 렌더링
+// ═══════════════════════════════════════════════════════════
+function renderFeature(f, color) {
+  if (!map || !f.geometry) return null;
+  const type = f.geometry.type;
+
+  if (type === 'Point') {
+    const [lng, lat] = f.geometry.coordinates;
+    return makeMarker(lat, lng, color, f);
+  }
+  if (type === 'MultiPoint') {
+    const [lng, lat] = f.geometry.coordinates[0];
+    return makeMarker(lat, lng, color, f);
+  }
+  if (type === 'LineString') {
+    return makeLine(f.geometry.coordinates.map(([lo,la])=>new kakao.maps.LatLng(la,lo)), color, f);
+  }
+  if (type === 'MultiLineString') {
+    return makeLine(f.geometry.coordinates.flat().map(([lo,la])=>new kakao.maps.LatLng(la,lo)), color, f);
+  }
+  if (type === 'Polygon') {
+    return makePoly(f.geometry.coordinates[0].map(([lo,la])=>new kakao.maps.LatLng(la,lo)), color, f);
+  }
+  if (type === 'MultiPolygon') {
+    return makePoly(f.geometry.coordinates[0][0].map(([lo,la])=>new kakao.maps.LatLng(la,lo)), color, f);
+  }
+  return null;
+}
+
+function makeMarker(lat, lng, color, f) {
   if (!markerCache[color]) {
-    const sz = 12;
+    const sz = 11;
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${sz}" height="${sz}">` +
-      `<circle cx="${sz/2}" cy="${sz/2}" r="${sz/2-1.5}" fill="${color}" stroke="white" stroke-width="1.5"/>` +
-      `</svg>`;
+      `<circle cx="${sz/2}" cy="${sz/2}" r="${sz/2-1.5}" fill="${color}" stroke="white" stroke-width="1.5"/></svg>`;
     markerCache[color] = new kakao.maps.MarkerImage(
       'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(svg),
-      new kakao.maps.Size(sz, sz),
-      { offset: new kakao.maps.Point(sz/2, sz/2) }
+      new kakao.maps.Size(sz, sz), { offset: new kakao.maps.Point(sz/2, sz/2) }
     );
   }
-  const m = new kakao.maps.Marker({
-    position: new kakao.maps.LatLng(lat, lng),
-    image: markerCache[color]
-    // map은 clusterer가 관리하므로 지정 안 함
-  });
+  const m = new kakao.maps.Marker({ map, position: new kakao.maps.LatLng(lat, lng), image: markerCache[color] });
   kakao.maps.event.addListener(m, 'click', () => showInfo(f));
   return m;
 }
 
-// ═══════════════════════════════════════════════════════════
-// 줌/드래그 변경 시 → 뷰포트 기반 렌더링
-// 줌 레벨이 낮을 때(가까이) 뷰포트 안의 선/면 객체 표시
-// ═══════════════════════════════════════════════════════════
-function onMapChange() {
-  updateZoomBadge();
-  const level = map.getLevel();
-
-  // 선/면 객체는 줌 레벨이 낮을 때만 표시
-  if (level <= 7) {
-    renderViewportLines();
-  } else {
-    clearLines();
-  }
-
-  // 뷰포트 내 표시 마커 수 업데이트
-  updateVisCount();
+function makeLine(path, color, f) {
+  if (path.length < 2) return null;
+  const pl = new kakao.maps.Polyline({ map, path, strokeWeight: 2, strokeColor: color, strokeOpacity: .8 });
+  kakao.maps.event.addListener(pl, 'click', () => showInfo(f));
+  return pl;
 }
 
-function renderViewportLines() {
-  clearLines();
-  if (!allFeatures.length) return;
+function makePoly(path, color, f) {
+  if (path.length < 3) return null;
+  const pg = new kakao.maps.Polygon({ map, path, strokeWeight: 1, strokeColor: color, strokeOpacity: .8, fillColor: color, fillOpacity: .25 });
+  kakao.maps.event.addListener(pg, 'click', () => showInfo(f));
+  return pg;
+}
 
-  const bounds = map.getBounds();
-  const sw = bounds.getSouthWest();
-  const ne = bounds.getNorthEast();
+// ═══════════════════════════════════════════════════════════
+// AI 결과 → 지도 반영
+// ═══════════════════════════════════════════════════════════
 
-  let count = 0;
-  allFeatures.forEach(f => {
-    if (!f.geometry) return;
-    const label = f.properties?.label || f.properties?.classId || '기타';
-    if (layerVis[label] === false) return;
-    if (count > 500) return; // 선/면 최대 500개
+// AI 응답에서 이정(km) 추출
+function extractKmValues(text) {
+  const matches = [...text.matchAll(/이정\s*([\d.]+)\s*km|(\d+(?:\.\d+)?)\s*km\s*구간|km\s*([\d.]+)/g)];
+  const vals = new Set();
+  matches.forEach(m => {
+    const v = parseFloat(m[1] || m[2] || m[3]);
+    if (!isNaN(v) && v > 0 && v < 200) vals.add(v);
+  });
+  return [...vals].slice(0, 5); // 최대 5개
+}
 
-    const type = f.geometry.type;
-    const color = getColor(f.properties?.classId);
-
-    if (type === 'LineString' || type === 'MultiLineString') {
-      const coords = type === 'LineString' ? f.geometry.coordinates : f.geometry.coordinates.flat();
-      if (!coords.length) return;
-      // 첫 좌표가 뷰포트 안에 있는지 체크
-      const [lng, lat] = coords[0];
-      if (lat < sw.getLat() || lat > ne.getLat() || lng < sw.getLng() || lng > ne.getLng()) return;
-
-      const path = coords.map(([lo, la]) => new kakao.maps.LatLng(la, lo));
-      const pl = new kakao.maps.Polyline({
-        map, path, strokeWeight: 2, strokeColor: color, strokeOpacity: .8
-      });
-      kakao.maps.event.addListener(pl, 'click', () => showInfo(f));
-      visiblePolylines.push(pl);
-      count++;
-
-    } else if (type === 'Polygon' || type === 'MultiPolygon') {
-      const ring = type === 'Polygon' ? f.geometry.coordinates[0] : f.geometry.coordinates[0][0];
-      if (!ring || !ring.length) return;
-      const [lng, lat] = ring[0];
-      if (lat < sw.getLat() || lat > ne.getLat() || lng < sw.getLng() || lng > ne.getLng()) return;
-
-      const path = ring.map(([lo, la]) => new kakao.maps.LatLng(la, lo));
-      const pg = new kakao.maps.Polygon({
-        map, path, strokeWeight: 1, strokeColor: color, strokeOpacity: .8,
-        fillColor: color, fillOpacity: .2
-      });
-      kakao.maps.event.addListener(pg, 'click', () => showInfo(f));
-      visiblePolygons.push(pg);
-      count++;
+// AI 응답에서 언급된 레이어 추출
+function extractMentionedLayers(text) {
+  const mentioned = [];
+  Object.keys(allFeatures).forEach(label => {
+    const def = getLayerDef(label);
+    if (text.includes(def.name) || text.includes(label)) {
+      if (!layerState[label]?.active) mentioned.push(label);
     }
   });
+  return mentioned.slice(0, 3);
 }
 
-function clearLines() {
-  visiblePolylines.forEach(p => p.setMap(null));
-  visiblePolylines = [];
-  visiblePolygons.forEach(p => p.setMap(null));
-  visiblePolygons = [];
-}
-
-function clearMapObjects() {
-  clearLines();
-  if (clusterer) clusterer.clear();
-  visibleMarkers = [];
-  markerCache = {};
-}
-
-// ═══════════════════════════════════════════════════════════
-// 레이어 가시성 토글
-// ═══════════════════════════════════════════════════════════
-function toggleLabel(label) {
-  layerVis[label] = layerVis[label] === false ? true : false;
-  // 클러스터 재구성
-  buildClusterer();
-  onMapChange();
-  buildLegend();
-}
-
-// ═══════════════════════════════════════════════════════════
-// 범례 & 통계
-// ═══════════════════════════════════════════════════════════
-function buildLegend() {
-  const labels = [...new Set(allFeatures.map(f => f.properties?.label || f.properties?.classId || '기타'))];
-  const el = document.getElementById('legend-items');
-  if (!labels.length) {
-    el.innerHTML = '<div style="font-size:11px;color:var(--t3)">GeoJSON 업로드 후 표시</div>';
-    return;
-  }
-  el.innerHTML = labels.map(label => {
-    const f = allFeatures.find(x => (x.properties?.label || x.properties?.classId) === label);
-    const color = f ? getColor(f.properties?.classId) : DEF_COLOR;
-    const vis = layerVis[label] !== false;
-    const cnt = dataStats[label] || 0;
-    const safeLabel = label.replace(/'/g, "\\'");
-    return `<div class="leg-item ${vis?'':'off'}" onclick="toggleLabel('${safeLabel}')">
-      <div class="leg-dot" style="background:${color}"></div>
-      <span>${label}(${cnt})</span>
-    </div>`;
-  }).join('');
-}
-
-function updateStats() {
-  document.getElementById('s-total').textContent = allFeatures.length.toLocaleString();
-}
-
-function updateVisCount() {
-  if (!map || !allFeatures.length) return;
-  const bounds = map.getBounds();
-  const sw = bounds.getSouthWest();
-  const ne = bounds.getNorthEast();
-  let cnt = 0;
-  allFeatures.forEach(f => {
-    if (!f.geometry) return;
-    const type = f.geometry.type;
-    if (type !== 'Point' && type !== 'MultiPoint') return;
-    const coords = type === 'Point' ? f.geometry.coordinates : f.geometry.coordinates[0];
-    const [lng, lat] = coords;
-    if (lat >= sw.getLat() && lat <= ne.getLat() && lng >= sw.getLng() && lng <= ne.getLng()) cnt++;
+// km 위치를 WGS84로 변환 (이정 데이터에서 찾기)
+function findCoordByKm(km) {
+  const kiloFeatures = allFeatures['이정(중심,연결로)'] || allFeatures['이정(갓길이정)'] || [];
+  let best = null, bestDiff = 999;
+  kiloFeatures.forEach(f => {
+    const fkm = parseFloat(f.properties?.km);
+    if (isNaN(fkm)) return;
+    const diff = Math.abs(fkm - km);
+    if (diff < bestDiff) { bestDiff = diff; best = f; }
   });
-  document.getElementById('s-vis').textContent = cnt.toLocaleString();
+  if (best && best.geometry?.type === 'Point') {
+    const [lng, lat] = best.geometry.coordinates;
+    return { lat, lng };
+  }
+  return null;
+}
+
+function buildMapActions(text) {
+  const kmVals = extractKmValues(text);
+  const layers  = extractMentionedLayers(text);
+  const bar = document.getElementById('map-action-bar');
+  const btns = document.getElementById('map-action-btns');
+
+  if (!kmVals.length && !layers.length) { bar.classList.remove('show'); return; }
+
+  bar.classList.add('show');
+  let html = '';
+
+  kmVals.forEach(km => {
+    html += `<button class="map-act-btn" onclick="showKmCircle(${km})">📍 ${km}km 표시</button>`;
+  });
+  layers.forEach(label => {
+    const def = getLayerDef(label);
+    html += `<button class="map-act-btn" onclick="activateLayerFromAI('${label.replace(/'/g,"\\'")}')">+ ${def.name||label} 레이어</button>`;
+  });
+  if (kmVals.length || layers.length) {
+    html += `<button class="map-act-btn" onclick="clearAIOverlays()" style="border-color:rgba(239,68,68,.3);color:var(--red)">✕ 제거</button>`;
+  }
+  btns.innerHTML = html;
+}
+
+function showKmCircle(km) {
+  const coord = findCoordByKm(km);
+  if (!coord) { toast(`이정 ${km}km 좌표를 찾을 수 없습니다`, 'warn'); return; }
+
+  // 반경 100m 원
+  const circle = new kakao.maps.Circle({
+    map,
+    center: new kakao.maps.LatLng(coord.lat, coord.lng),
+    radius: 100,
+    strokeWeight: 2,
+    strokeColor: '#10b981',
+    strokeOpacity: .9,
+    fillColor: '#10b981',
+    fillOpacity: .2
+  });
+  aiCircles.push(circle);
+
+  // 라벨 마커
+  const label = new kakao.maps.CustomOverlay({
+    map,
+    position: new kakao.maps.LatLng(coord.lat, coord.lng),
+    content: `<div style="background:rgba(16,185,129,.9);color:#fff;padding:3px 8px;border-radius:4px;font-size:11px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;">${km}km</div>`,
+    yAnchor: 2.2
+  });
+  aiMarkers.push(label);
+
+  // 해당 위치로 이동
+  map.setCenter(new kakao.maps.LatLng(coord.lat, coord.lng));
+  map.setLevel(6);
+  toast(`이정 ${km}km 위치를 표시했습니다`, 'success');
+}
+
+function activateLayerFromAI(label) {
+  activateLayer(label);
+  updateLayerUI(label);
+  updateActiveCount();
+  toast(`${getLayerDef(label).name || label} 레이어를 추가했습니다`, 'info');
+}
+
+function clearAIOverlays() {
+  aiCircles.forEach(c => c.setMap(null));
+  aiMarkers.forEach(m => m.setMap(null));
+  aiCircles = [];
+  aiMarkers = [];
+  toast('AI 표시 제거', 'info');
+}
+
+// ═══════════════════════════════════════════════════════════
+// 유틸
+// ═══════════════════════════════════════════════════════════
+function clearAllLayers() {
+  Object.keys(layerState).forEach(label => {
+    (layerState[label]?.kakaoObjs || []).forEach(obj => { try { obj.setMap(null); } catch(e){} });
+  });
+  layerState = {};
+  clearAIOverlays();
+}
+
+function resetAll() {
+  if (!confirm('모든 데이터를 초기화하시겠습니까?')) return;
+  clearAllLayers();
+  allFeatures = {};
+  dataStats = {};
+  markerCache = {};
+  document.getElementById('layer-list').innerHTML = '<div style="padding:12px 6px;font-size:11px;color:var(--t3);line-height:1.6">GeoJSON 업로드 후<br>레이어 목록이 표시됩니다.</div>';
+  document.getElementById('lp-loaded').textContent = '· 미로드';
+  document.getElementById('s-total').textContent = '0';
+  document.getElementById('s-active').textContent = '0';
+  document.getElementById('map-action-bar').classList.remove('show');
+  toast('초기화 완료', 'info');
+}
+
+function fitAll() {
+  if (!map) return;
+  const bounds = new kakao.maps.LatLngBounds();
+  let added = 0;
+  Object.values(allFeatures).flat().forEach((f, i) => {
+    if (i % 10 !== 0 || !f.geometry) return;
+    if (f.geometry.type === 'Point') {
+      const [lng, lat] = f.geometry.coordinates;
+      if (isFinite(lat) && isFinite(lng)) { bounds.extend(new kakao.maps.LatLng(lat, lng)); added++; }
+    }
+  });
+  if (added) map.setBounds(bounds);
 }
 
 function updateZoomBadge() {
   if (!map) return;
-  const level = map.getLevel();
-  document.getElementById('zoom-badge').textContent = `줌: ${level}`;
-  document.getElementById('s-zoom').textContent = level;
+  const lv = map.getLevel();
+  document.getElementById('zoom-badge').textContent = `줌: ${lv}`;
+  document.getElementById('s-zoom').textContent = lv;
 }
 
-function fitAll() {
-  if (!map || !allFeatures.length) return;
-  const bounds = new kakao.maps.LatLngBounds();
-  let added = 0;
-  // 샘플링으로 bounds 계산 (전체 순회 불필요)
-  const step = Math.max(1, Math.floor(allFeatures.length / 500));
-  for (let i = 0; i < allFeatures.length; i += step) {
-    const f = allFeatures[i];
-    if (!f.geometry) continue;
-    const type = f.geometry.type;
-    if (type === 'Point') {
-      const [lng, lat] = f.geometry.coordinates;
-      if (isFinite(lat) && isFinite(lng)) { bounds.extend(new kakao.maps.LatLng(lat, lng)); added++; }
-    }
-  }
-  if (added) map.setBounds(bounds);
+function updateActiveCount() {
+  let cnt = 0;
+  Object.values(layerState).forEach(s => { if (s.active) cnt += s.kakaoObjs.length; });
+  document.getElementById('s-active').textContent = cnt.toLocaleString();
 }
+
+function showOv(msg, pct) {
+  document.getElementById('overlay').classList.add('show');
+  document.getElementById('ov-msg').textContent = msg;
+  document.getElementById('ov-bar').style.width = pct + '%';
+}
+function hideOv() { document.getElementById('overlay').classList.remove('show'); }
 
 // ═══════════════════════════════════════════════════════════
 // 객체 정보 팝업
@@ -636,9 +777,7 @@ function showInfo(f) {
   document.getElementById('info-pop').classList.add('show');
   setCtx(`${p.label||p.classId} · ${p.id} · 이정 ${p.km||'-'}km`);
 }
-
 function closeInfo() { document.getElementById('info-pop').classList.remove('show'); }
-
 function askAI() {
   if (!selectedF) return;
   const p = selectedF.properties || {};
@@ -647,53 +786,30 @@ function askAI() {
 }
 
 // ═══════════════════════════════════════════════════════════
-// 초기화
-// ═══════════════════════════════════════════════════════════
-function resetAll() {
-  if (!confirm('지도의 모든 데이터를 초기화하시겠습니까?')) return;
-  clearMapObjects();
-  allFeatures = [];
-  dataStats = {};
-  layerVis = {};
-  buildLegend();
-  updateStats();
-  document.getElementById('s-vis').textContent = '0';
-  document.getElementById('finfo').textContent = '대기 중';
-  toast('초기화 완료', 'info');
-}
-
-// ═══════════════════════════════════════════════════════════
-// 오버레이
-// ═══════════════════════════════════════════════════════════
-function showOv(msg, pct) {
-  document.getElementById('overlay').classList.add('show');
-  document.getElementById('ov-msg').textContent = msg;
-  document.getElementById('ov-bar').style.width = pct + '%';
-}
-function hideOv() { document.getElementById('overlay').classList.remove('show'); }
-
-// ═══════════════════════════════════════════════════════════
 // 채팅
 // ═══════════════════════════════════════════════════════════
 const SYS = `당신은 한국도로공사 정밀도로지도(HD Map) 전문 AI 분석가입니다.
-도로대장 GeoJSON 데이터를 기반으로 도로 안전, C-ITS, 유지보수, 교통 흐름 관점에서 전문적 분석을 한국어로 제공합니다.`;
+도로대장 GeoJSON 데이터를 기반으로 도로 안전, C-ITS, 유지보수, 교통 흐름 관점에서 전문적 분석을 한국어로 제공합니다.
+분석 결과에 특정 이정(km) 위치를 언급할 때는 반드시 "이정 X.XXkm" 형식으로 명시해주세요.`;
 
-function setCtx(t) { currentCtx = t; document.getElementById('ctx-txt').textContent = t; document.getElementById('ctx-bar').classList.add('show'); }
-function clearCtx() { currentCtx = null; document.getElementById('ctx-bar').classList.remove('show'); }
+function setCtx(t) { currentCtx=t; document.getElementById('ctx-txt').textContent=t; document.getElementById('ctx-bar').classList.add('show'); }
+function clearCtx() { currentCtx=null; document.getElementById('ctx-bar').classList.remove('show'); }
 function sq(t) { send(t); }
 
 async function send(override) {
   const el = document.getElementById('cinput');
   const txt = override || el.value.trim();
   if (!txt) return;
-  if (!override) { el.value = ''; resize(el); }
+  if (!override) { el.value=''; resize(el); }
 
   addUser(txt);
   document.getElementById('sbtn').disabled = true;
 
+  const activeLabels = Object.entries(layerState).filter(([,s])=>s.active).map(([l])=>l);
   const msg = currentCtx ? `[선택 객체: ${currentCtx}]\n\n${txt}` : txt;
   const statsStr = Object.entries(dataStats).slice(0,8).map(([k,v])=>`${k}:${v}개`).join(', ');
-  const sys = SYS + (statsStr ? `\n\n[현재 데이터: 총 ${allFeatures.length}개 / ${statsStr}]` : '');
+  const sys = SYS + `\n\n[현재 활성 레이어: ${activeLabels.join(', ') || '없음'}]` +
+    (statsStr ? `\n[데이터: 총 ${Object.values(allFeatures).flat().length}개 / ${statsStr}]` : '');
 
   chatHistory.push({ role:'user', content:msg });
   const typing = showTyping();
@@ -703,11 +819,14 @@ async function send(override) {
       method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ system:sys, messages:chatHistory })
     });
-    if (!res.ok) { const e = await res.json(); throw new Error(e.error||'서버 오류'); }
+    if (!res.ok) { const e=await res.json(); throw new Error(e.error||'서버 오류'); }
     const data = await res.json();
     typing.remove();
+    lastAIResponse = data.content;
     addAI(data.content);
     chatHistory.push({ role:'assistant', content:data.content });
+    // AI 응답 분석 → 지도 액션 버튼 생성
+    buildMapActions(data.content);
   } catch(e) {
     typing.remove();
     addAI(`⚠️ 오류: ${e.message}`);
@@ -715,54 +834,34 @@ async function send(override) {
   document.getElementById('sbtn').disabled = false;
 }
 
-function addUser(t) { append('user', `<div class="av">👤</div><div class="mc">${esc(t).replace(/\n/g,'<br>')}</div>`); }
-function addAI(t)   { append('assistant', `<div class="av">🤖</div><div class="mc">${fmt(t)}</div>`); }
+function addUser(t) { append('user',`<div class="av">👤</div><div class="mc">${esc(t).replace(/\n/g,'<br>')}</div>`); }
+function addAI(t)   { append('assistant',`<div class="av">🤖</div><div class="mc">${fmt(t)}</div>`); }
 function showTyping() { return append('assistant','<div class="av">🤖</div><div class="mc"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>'); }
 function append(role, html) {
-  const d = document.createElement('div');
-  d.className = 'msg ' + role;
-  d.innerHTML = html;
-  document.getElementById('msgs').appendChild(d);
-  scrollBot();
-  return d;
+  const d=document.createElement('div'); d.className='msg '+role; d.innerHTML=html;
+  document.getElementById('msgs').appendChild(d); scrollBot(); return d;
 }
 function fmt(t) { return t.replace(/\*\*(.+?)\*\*/g,'<strong>$1</strong>').replace(/`(.+?)`/g,'<code>$1</code>').replace(/\n/g,'<br>'); }
 function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function scrollBot() { const m=document.getElementById('msgs'); m.scrollTop=m.scrollHeight; }
-function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){ e.preventDefault(); send(); } }
-function resize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,110)+'px'; }
+function onKey(e) { if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();send();} }
+function resize(el) { el.style.height='auto'; el.style.height=Math.min(el.scrollHeight,100)+'px'; }
 
 function exportChat() {
-  const txt = chatHistory.map(m=>`[${m.role.toUpperCase()}]\n${m.content}`).join('\n\n---\n\n');
-  const b = new Blob([`정밀도로지도 AI 분석 리포트\n${new Date().toLocaleString('ko-KR')}\n\n${'='.repeat(40)}\n\n${txt}`],{type:'text/plain;charset=utf-8'});
-  const a = document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`road_analysis_${Date.now()}.txt`; a.click();
+  const txt=chatHistory.map(m=>`[${m.role.toUpperCase()}]\n${m.content}`).join('\n\n---\n\n');
+  const b=new Blob([`정밀도로지도 AI 분석 리포트\n${new Date().toLocaleString('ko-KR')}\n\n${'='.repeat(40)}\n\n${txt}`],{type:'text/plain;charset=utf-8'});
+  const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=`road_analysis_${Date.now()}.txt`; a.click();
 }
 
 function toast(msg, type='info') {
-  const colors = {success:'#10b981',info:'#3b82f6',error:'#ef4444',warn:'#f59e0b'};
-  const t = document.createElement('div'); t.className='toast';
+  const colors={success:'#10b981',info:'#3b82f6',error:'#ef4444',warn:'#f59e0b'};
+  const t=document.createElement('div'); t.className='toast';
   t.style.borderLeft=`3px solid ${colors[type]||colors.info}`; t.textContent=msg;
-  document.body.appendChild(t); setTimeout(()=>t.remove(),3500);
+  document.body.appendChild(t); setTimeout(()=>t.remove(),3200);
 }
 
 // ═══════════════════════════════════════════════════════════
-// 분할선 드래그
-// ═══════════════════════════════════════════════════════════
-(function(){
-  const d = document.getElementById('dvd');
-  let drag = false;
-  d.addEventListener('mousedown', e => { drag=true; e.preventDefault(); });
-  document.addEventListener('mousemove', e => {
-    if (!drag) return;
-    const r = document.querySelector('.main').getBoundingClientRect();
-    const p = Math.min(75, Math.max(30, (e.clientX-r.left)/r.width*100));
-    document.getElementById('map-wrap').style.width = p + '%';
-  });
-  document.addEventListener('mouseup', () => drag=false);
-})();
-
-// ═══════════════════════════════════════════════════════════
-// 카카오맵 동적 로드 (모든 함수 정의 후 마지막에 실행)
+// 카카오맵 동적 로드 (모든 함수 정의 후 마지막)
 // ═══════════════════════════════════════════════════════════
 (async function(){
   try {
@@ -772,7 +871,7 @@ function toast(msg, type='info') {
     document.getElementById('srv-status').style.color = 'var(--green)';
     if (!c.kakaoKey) { showPlaceholder(); return; }
     const s = document.createElement('script');
-    s.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${c.kakaoKey}&libraries=clusterer&autoload=false`;
+    s.src = `https://dapi.kakao.com/v2/maps/sdk.js?appkey=${c.kakaoKey}&autoload=false`;
     s.onload = () => kakao.maps.load(initMap);
     s.onerror = showPlaceholder;
     document.head.appendChild(s);
