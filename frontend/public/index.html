@@ -133,6 +133,7 @@ table.attr-tbl td{
 table.attr-tbl tr{cursor:pointer;transition:background .1s;}
 table.attr-tbl tr:hover td{background:rgba(59,130,246,.08);}
 table.attr-tbl tr.selected td{background:rgba(59,130,246,.18);color:var(--t1);}
+table.attr-tbl tr.ai-selected td{color:var(--t1);}
 table.attr-tbl td.km-cell{color:var(--cyan);}
 table.attr-tbl td.id-cell{color:var(--t3);}
 /* 리사이즈 핸들 */
@@ -1358,7 +1359,18 @@ const SYS = `당신은 한국도로공사 정밀도로지도(HD Map) 전문 AI �
 [지도 표시 안내]
 분석 결과에 이정(km) 값이 포함되면 우측 채팅 패널 상단에 [AI 결과를 지도에 표시] 버튼이 자동 생성됩니다.
 위험/주의/정보 수준에 따라 빨강/주황/파랑 색상으로 구간이 하이라이트됩니다.
-반드시 구체적인 km 값을 포함하여 지도 반영이 가능하도록 해주세요.`;
+반드시 구체적인 km 값을 포함하여 지도 반영이 가능하도록 해주세요.
+
+[객체 ID 반환 규칙 - 중요]
+특정 객체(시설물)를 조회하거나 필터링한 결과가 있을 때는 반드시 다음 JSON 블록을 응답 마지막에 추가하세요:
+\`\`\`feature-result
+{"label":"레이어명","ids":["id1","id2",...],"reason":"선택 이유","severity":"danger|warning|info"}
+\`\`\`
+- label: 데이터의 label 값과 정확히 일치해야 함 (예: "차도구간(교량)", "측정점")
+- ids: 해당하는 feature의 id 속성값 목록 (최대 50개)
+- 여러 레이어에 걸치면 JSON 블록을 여러 개 작성
+- 조회/필터 결과가 없거나 단순 설명이면 JSON 블록 생략`;
+
 
 
 function setCtx(t) { currentCtx=t; document.getElementById('ctx-txt').textContent=t; document.getElementById('ctx-bar').classList.add('show'); }
@@ -1375,10 +1387,19 @@ async function send(override) {
 
   const activeLabels = Object.keys(layerActive).filter(l=>layerActive[l]);
   const statsStr = Object.entries(dataStats).slice(0,8).map(([k,v])=>`${k}:${v}개`).join(', ');
+
+  // 활성 레이어의 feature ID 샘플 (AI가 정확한 ID로 응답 가능하도록)
+  const idContext = activeLabels.slice(0,4).map(label => {
+    const fs = allFeatures[label] || [];
+    const sample = fs.slice(0, 3).map(f => f.properties?.id).filter(Boolean);
+    return `${label}: [${sample.join(',')}...총${fs.length}개]`;
+  }).join('\n');
+
   const msg = currentCtx ? `[선택 객체: ${currentCtx}]\n\n${txt}` : txt;
   const sys = SYS
     + `\n[활성 레이어: ${activeLabels.join(', ')||'없음'}]`
-    + (statsStr ? `\n[데이터: ${statsStr}]` : '');
+    + (statsStr ? `\n[데이터: ${statsStr}]` : '')
+    + (idContext ? `\n[레이어별 ID 샘플:\n${idContext}]` : '');
 
   chatHistory.push({ role:'user', content:msg });
   const typing = showTyping();
@@ -1402,7 +1423,142 @@ async function send(override) {
 }
 
 function addUser(t) { append('user',`<div class="av">👤</div><div class="mc">${esc(t).replace(/\n/g,'<br>')}</div>`); }
-function addAI(t)   { append('assistant',`<div class="av">🤖</div><div class="mc">${fmt(t)}</div>`); }
+
+function addAI(t) {
+  // feature-result 블록 파싱 후 제거
+  const results = parseFeatureResults(t);
+  const cleanText = t.replace(/```feature-result[\s\S]*?```/g, '').trim();
+
+  const d = append('assistant', `<div class="av">🤖</div><div class="mc">${fmt(cleanText)}</div>`);
+
+  // 결과 블록이 있으면 테이블 연동 버튼 삽입
+  if (results.length) {
+    const mc = d.querySelector('.mc');
+    const btnWrap = document.createElement('div');
+    btnWrap.style.cssText = 'margin-top:8px;display:flex;flex-direction:column;gap:4px;';
+    results.forEach((r, i) => {
+      const def = getLDef(r.label);
+      const col = SEV_COLORS[r.severity] || def.color || '#3b82f6';
+      const icon = r.severity==='danger'?'🔴': r.severity==='warning'?'🟡':'🔵';
+      const btn = document.createElement('button');
+      btn.className = 'ai-btn';
+      btn.style.cssText = `border-color:${col}40;color:${col};background:${col}15;width:100%;justify-content:flex-start;gap:6px;padding:4px 8px;`;
+      btn.innerHTML = `${icon} <strong>${def.name||r.label}</strong> ${r.ids.length}개 · ${r.reason||''} <span style="margin-left:auto;font-size:9px;opacity:.7">테이블에서 보기 ›</span>`;
+      btn.onclick = () => openAttrTableWithIds(r.label, r.ids, r.severity);
+      btnWrap.appendChild(btn);
+    });
+    // 전체 지도 표시 버튼
+    if (results.length) {
+      const allBtn = document.createElement('button');
+      allBtn.className = 'ai-btn';
+      allBtn.style.cssText = 'width:100%;justify-content:center;margin-top:2px;';
+      allBtn.innerHTML = `🗺️ 전체 지도에 표시`;
+      allBtn.onclick = () => highlightAllFeatureResults(results);
+      btnWrap.appendChild(allBtn);
+    }
+    mc.appendChild(btnWrap);
+
+    // 자동으로 지도에도 표시
+    highlightAllFeatureResults(results);
+  }
+}
+
+// feature-result JSON 블록 파싱
+function parseFeatureResults(text) {
+  const results = [];
+  const re = /```feature-result\s*([\s\S]*?)```/g;
+  for (const m of text.matchAll(re)) {
+    try {
+      const obj = JSON.parse(m[1].trim());
+      if (obj.label && Array.isArray(obj.ids)) results.push(obj);
+    } catch(e) {}
+  }
+  return results;
+}
+
+// 여러 레이어 결과를 지도에 하이라이트
+function highlightAllFeatureResults(results) {
+  clearAIOverlaysOnly();
+  const bounds = new kakao.maps.LatLngBounds();
+  let totalCnt = 0;
+
+  results.forEach(r => {
+    const features = (allFeatures[r.label] || []).filter(f => r.ids.includes(f.properties?.id));
+    const color = SEV_COLORS[r.severity] || getLDef(r.label).color || '#3b82f6';
+
+    features.forEach(f => {
+      if (!f.geometry) return;
+      const geom = f.geometry;
+      if (geom.type === 'Point') {
+        const [lng, lat] = geom.coordinates;
+        if (!isFinite(lat)||!isFinite(lng)) return;
+        const pos = new kakao.maps.LatLng(lat, lng);
+        const c = new kakao.maps.Circle({
+          map, center: pos, radius: 55,
+          strokeWeight: 2, strokeColor: color, strokeOpacity: .9,
+          fillColor: color, fillOpacity: .35
+        });
+        aiCircles.push(c);
+        bounds.extend(pos); totalCnt++;
+      } else if (geom.type === 'Polygon') {
+        const path = geom.coordinates[0].map(([lo,la]) => new kakao.maps.LatLng(la,lo));
+        if (path.length < 3) return;
+        const pg = new kakao.maps.Polygon({
+          map, path,
+          strokeWeight: 2, strokeColor: color, strokeOpacity: .9,
+          fillColor: color, fillOpacity: .35
+        });
+        aiCircles.push(pg);
+        bounds.extend(path[0]); totalCnt++;
+      }
+    });
+  });
+
+  if (totalCnt > 0) {
+    map.setBounds(bounds, 60);
+    toast(`${totalCnt}개 객체 지도 표시`, 'success');
+  }
+}
+
+// 특정 ID 목록으로 테이블 열기 + 멀티 선택
+function openAttrTableWithIds(label, ids, severity='info') {
+  const features = allFeatures[label];
+  if (!features || !features.length) { toast(`${label} 데이터 없음`, 'warn'); return; }
+
+  // 레이어가 비활성이면 자동 활성화
+  if (!layerActive[label]) {
+    activateLayer(label);
+    updateActiveCount();
+  }
+
+  // 테이블 열기 (전체 목록으로)
+  openAttrTable(label);
+
+  // 잠시 후 해당 ID들 하이라이트 + 스크롤
+  setTimeout(() => {
+    const idSet = new Set(ids);
+    const rows = document.querySelectorAll('#attr-tbl tbody tr');
+    let firstRowEl = null;
+
+    rows.forEach((row, idx) => {
+      const f = attrTableFiltered[idx];
+      if (!f) return;
+      if (idSet.has(String(f.properties?.id))) {
+        row.classList.add('selected');
+        row.style.background = `${SEV_COLORS[severity]||'#3b82f6'}22`;
+        row.style.borderLeft = `2px solid ${SEV_COLORS[severity]||'#3b82f6'}`;
+        if (!firstRowEl) firstRowEl = row;
+      }
+    });
+
+    // 첫 번째 결과 행으로 스크롤
+    if (firstRowEl) {
+      firstRowEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+
+    toast(`${ids.length}개 객체 선택됨`, 'success');
+  }, 150);
+}
 function showTyping() { return append('assistant','<div class="av">🤖</div><div class="mc"><div class="typing"><div class="td"></div><div class="td"></div><div class="td"></div></div></div>'); }
 function append(role, html) {
   const d=document.createElement('div'); d.className='msg '+role; d.innerHTML=html;
