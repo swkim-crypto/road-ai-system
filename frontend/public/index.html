@@ -1232,57 +1232,63 @@ function selectAttrRow(idx, rowEl) {
   highlightFeature(f);
   showInfo(f.properties, f.geometry.type, false);
 
-  // 현재 뷰 밖에 있을 때만 패닝 (줌레벨 유지)
-  const geom = f.geometry;
-  let targetPos = null;
-  if (geom.type === 'Point') {
-    const [lng, lat] = geom.coordinates;
-    if (isFinite(lat) && isFinite(lng)) targetPos = new kakao.maps.LatLng(lat, lng);
-  } else if (geom.type === 'Polygon') {
-    const [lo, la] = geom.coordinates[0][0];
-    if (isFinite(la) && isFinite(lo)) targetPos = new kakao.maps.LatLng(la, lo);
-  }
-  if (targetPos) {
-    const bounds = map.getBounds();
-    if (!bounds.contain(targetPos)) {
-      map.panTo(targetPos); // 줌 유지, 위치만 이동
-    }
-  }
+  // 전체 노선 뷰로 맞추기 (상대 위치 파악용)
+  fitAllRoute();
 }
 
 function highlightFeature(f) {
   if (!map || !f.geometry) return;
   const geom = f.geometry;
-  const color = '#f59e0b'; // 강조색 amber
+  const color = '#f59e0b';
+
+  // 줌레벨이 클수록(축소) 반경도 크게 — 전체 뷰(레벨9)에서도 눈에 띄게
+  const zoomRadius = () => {
+    const lv = map.getLevel();
+    if (lv >= 10) return 800;
+    if (lv >= 9)  return 400;
+    if (lv >= 8)  return 200;
+    if (lv >= 7)  return 120;
+    if (lv >= 6)  return 80;
+    return 50;
+  };
 
   if (geom.type === 'Point') {
     const [lng, lat] = geom.coordinates;
     const pos = new kakao.maps.LatLng(lat, lng);
-    attrHighlight = new kakao.maps.Circle({
-      map, center: pos, radius: 60,
+    const circle = new kakao.maps.Circle({
+      map, center: pos, radius: zoomRadius(),
       strokeWeight: 3, strokeColor: color, strokeOpacity: 1,
-      fillColor: color, fillOpacity: .35
+      fillColor: color, fillOpacity: .45
     });
-    // 라벨
     const p = f.properties || {};
-    const label = new kakao.maps.CustomOverlay({
+    const lbl = new kakao.maps.CustomOverlay({
       map, position: pos,
-      content: `<div style="background:${color};color:#000;padding:2px 8px;border-radius:4px;font-size:11px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,.4);">▶ ${p.label||p.classId||'?'} ${p.km?p.km+'km':''}</div>`,
-      yAnchor: 3.0
+      content: `<div style="background:${color};color:#000;padding:3px 10px;border-radius:4px;font-size:12px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;font-weight:700;box-shadow:0 2px 8px rgba(0,0,0,.5);">▶ ${p.label||p.classId||'?'} ${p.km!=null?p.km+'km':''}</div>`,
+      yAnchor: 3.2
     });
-    attrHighlight = { circle: attrHighlight, label };
+    attrHighlight = { circle, label: lbl };
+
+    // 줌 변경 시 반경 재조정
+    if (attrHighlight._zoomListener) kakao.maps.event.removeListener(map, 'zoom_changed', attrHighlight._zoomListener);
+    const onZoom = () => { try { circle.setRadius(zoomRadius()); } catch(e){} };
+    kakao.maps.event.addListener(map, 'zoom_changed', onZoom);
+    attrHighlight._zoomListener = onZoom;
+
   } else if (geom.type === 'Polygon') {
     const path = geom.coordinates[0].map(([lo, la]) => new kakao.maps.LatLng(la, lo));
     attrHighlight = new kakao.maps.Polygon({
       map, path,
-      strokeWeight: 3, strokeColor: color, strokeOpacity: 1,
-      fillColor: color, fillOpacity: .4
+      strokeWeight: 4, strokeColor: color, strokeOpacity: 1,
+      fillColor: color, fillOpacity: .45
     });
   }
 }
 
 function clearAttrHighlight() {
   if (!attrHighlight) return;
+  if (attrHighlight._zoomListener) {
+    try { kakao.maps.event.removeListener(map, 'zoom_changed', attrHighlight._zoomListener); } catch(e){}
+  }
   if (attrHighlight.circle) {
     try { attrHighlight.circle.setMap(null); } catch(e){}
     try { attrHighlight.label.setMap(null); } catch(e){}
