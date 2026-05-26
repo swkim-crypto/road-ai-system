@@ -173,6 +173,8 @@ body{display:flex;flex-direction:column;}
   </div>
   <div class="hdr-btns">
     <button class="btn pri" onclick="triggerUpload()">📂 GeoJSON 업로드</button>
+    <button class="btn" onclick="fitAllRoute()" title="전체 노선 0~32km 보기">🛣️ 전체 노선</button>
+    <button class="btn" onclick="clearAIOverlays()" title="AI 분석 오버레이만 제거">✕ 분석결과</button>
     <button class="btn danger" onclick="resetAll()">🔄 초기화</button>
     <button class="btn" onclick="exportChat()">📊 내보내기</button>
   </div>
@@ -637,6 +639,22 @@ function fitAll() {
   if (cnt) map.setBounds(bounds, 40);
 }
 
+// 전체 노선(이정 spine) 기준 0~32km 전체 보기
+function fitAllRoute() {
+  if (!map) return;
+  const spine = allFeatures['이정(갓길이정)'] || allFeatures['이정(중심,연결로)'] || [];
+  if (!spine.length) { fitAll(); return; }
+  const bounds = new kakao.maps.LatLngBounds();
+  let cnt = 0;
+  spine.forEach((f, i) => {
+    if (i % 5 !== 0 || f.geometry?.type !== 'Point') return;
+    const [lng, lat] = f.geometry.coordinates;
+    if (isFinite(lat) && isFinite(lng)) { bounds.extend(new kakao.maps.LatLng(lat, lng)); cnt++; }
+  });
+  if (cnt) { map.setBounds(bounds, 30); toast('전체 노선 표시 (0~32km)', 'info'); }
+  else fitAll();
+}
+
 function updateActiveCount() {
   let cnt = 0;
   Object.keys(layerActive).forEach(l => { if (layerActive[l]) cnt += (layerObjects[l]||[]).length; });
@@ -835,12 +853,15 @@ function showKmRange(kmFrom, kmTo, severity='default', label='') {
   toast(`${kmFrom}~${kmTo}km 구간 하이라이트 (${pts.length}포인트)`, 'success');
 }
 
-// AI 응답 파싱 후 액션 바 구성
+// AI 응답 파싱 후 액션 바 구성 + 즉시 전체 렌더
 function buildMapActions(text) {
   const mentions = parseKmMentions(text);
   const layers   = extractMentionedLayers(text);
   const bar      = document.getElementById('map-action-bar');
   if (!mentions.length && !layers.length) { bar.classList.remove('show'); return; }
+
+  // 기존 오버레이 제거 후 새로 그리기
+  clearAIOverlaysOnly();
 
   bar.classList.add('show');
   const sev = detectSeverity(text);
@@ -849,18 +870,20 @@ function buildMapActions(text) {
 
   if (mentions.length) {
     html += `<div class="map-act-section">📍 위치 표시</div>`;
-    mentions.forEach(m => {
+
+    // ① 즉시 전체 렌더 (dim 상태 - 반투명)
+    mentions.forEach((m, idx) => {
       if (m.type === 'range') {
-        html += `<button class="map-act-btn ${sevClass}" onclick="showKmRange(${m.from},${m.to},'${sev}')">📏 ${m.from}~${m.to}km</button>`;
+        renderKmRangeDim(m.from, m.to, sev, idx);
+        html += `<button class="map-act-btn ${sevClass}" onclick="focusAIItem(${idx})">📏 ${m.from}~${m.to}km</button>`;
       } else {
-        html += `<button class="map-act-btn ${sevClass}" onclick="showKmPoint(${m.km},'${sev}')">📍 ${m.km}km</button>`;
+        renderKmPointDim(m.km, sev, idx);
+        html += `<button class="map-act-btn ${sevClass}" onclick="focusAIItem(${idx})">📍 ${m.km}km</button>`;
       }
     });
+
     if (mentions.length > 1) {
-      // 전체 표시 버튼
-      const allRanges = mentions.filter(m=>m.type==='range').map(m=>`[${m.from},${m.to}]`).join(',');
-      const allPoints = mentions.filter(m=>m.type==='point').map(m=>m.km).join(',');
-      html += `<button class="map-act-btn" onclick="showAllAIResults([${allRanges}],[${allPoints}],'${sev}')">🗺️ 전체 표시</button>`;
+      html += `<button class="map-act-btn" onclick="focusAllAI()">🗺️ 전체 보기</button>`;
     }
   }
 
@@ -871,9 +894,126 @@ function buildMapActions(text) {
 
   html += `<button class="map-act-btn map-act-del" onclick="clearAIOverlays()">✕ 제거</button>`;
   document.getElementById('map-action-btns').innerHTML = html;
+
+  // 저장: 버튼 포커스용
+  window._aiMentions = mentions;
+  window._aiSev = sev;
+
+  // 전체 항목이 보이도록 지도 맞춤
+  focusAllAI();
 }
 
-// 전체 일괄 표시
+// dim 렌더: 반투명 오버레이로 전체 항목 표시 (index 저장)
+function renderKmRangeDim(kmFrom, kmTo, severity, idx) {
+  const pts = findCoordsInRange(kmFrom, kmTo);
+  if (pts.length < 2) return;
+  const color = SEV_COLORS[severity] || SEV_COLORS.default;
+
+  const pl = new kakao.maps.Polyline({
+    map, path: pts,
+    strokeWeight: 5, strokeColor: color, strokeOpacity: .45, strokeStyle: 'solid'
+  });
+  pl._aiIdx = idx; pl._aiType = 'range'; pl._aiFrom = kmFrom; pl._aiTo = kmTo;
+  aiCircles.push(pl);
+
+  // 중앙 라벨 (작게)
+  const mid = pts[Math.floor(pts.length / 2)];
+  const icon = severity==='danger'?'🔴': severity==='warning'?'🟡':'🔵';
+  const ov = new kakao.maps.CustomOverlay({
+    map, position: mid,
+    content: `<div style="background:rgba(15,23,42,.75);border:1px solid ${color};color:#fff;padding:2px 7px;border-radius:4px;font-size:10px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;opacity:.8;">${icon} ${kmFrom}~${kmTo}km</div>`,
+    yAnchor: 2.8
+  });
+  ov._aiIdx = idx;
+  aiLabels.push(ov);
+}
+
+function renderKmPointDim(km, severity, idx) {
+  const pos = findCoordByKm(km);
+  if (!pos) return;
+  const color = SEV_COLORS[severity] || SEV_COLORS.default;
+  const icon = severity==='danger'?'🔴': severity==='warning'?'🟡':'📍';
+
+  const circle = new kakao.maps.Circle({
+    map, center: pos, radius: 80,
+    strokeWeight: 2, strokeColor: color, strokeOpacity: .5,
+    fillColor: color, fillOpacity: .15
+  });
+  circle._aiIdx = idx; circle._aiType = 'point'; circle._aiKm = km;
+  aiCircles.push(circle);
+
+  const ov = new kakao.maps.CustomOverlay({
+    map, position: pos,
+    content: `<div style="background:rgba(15,23,42,.75);border:1px solid ${color};color:#fff;padding:2px 7px;border-radius:4px;font-size:10px;font-family:'Noto Sans KR',sans-serif;white-space:nowrap;opacity:.8;">${icon} ${km}km</div>`,
+    yAnchor: 2.8
+  });
+  ov._aiIdx = idx;
+  aiLabels.push(ov);
+}
+
+// 버튼 클릭 → 해당 항목 하이라이트 + 줌인
+function focusAIItem(idx) {
+  if (!window._aiMentions) return;
+  const m   = window._aiMentions[idx];
+  const sev = window._aiSev || 'info';
+  const color = SEV_COLORS[sev] || SEV_COLORS.default;
+
+  // 모든 오버레이 dim으로 되돌리기
+  aiCircles.forEach(c => {
+    try {
+      if (c instanceof kakao.maps.Polyline) c.setOptions({ strokeWeight: 5, strokeOpacity: .45 });
+      else if (c instanceof kakao.maps.Circle) c.setOptions({ strokeOpacity: .5, fillOpacity: .15 });
+    } catch(e){}
+  });
+  aiLabels.forEach(l => {
+    try {
+      const el = l.getContent();
+      if (typeof el === 'string') return;
+      el.style && (el.style.opacity = '.8');
+    } catch(e){}
+  });
+
+  // 해당 항목만 bright + 줌인
+  aiCircles.filter(c => c._aiIdx === idx).forEach(c => {
+    try {
+      if (c instanceof kakao.maps.Polyline) c.setOptions({ strokeWeight: 8, strokeOpacity: .9 });
+      else if (c instanceof kakao.maps.Circle) c.setOptions({ strokeOpacity: .9, fillOpacity: .3 });
+    } catch(e){}
+  });
+
+  if (m.type === 'range') {
+    const pts = findCoordsInRange(m.from, m.to);
+    if (pts.length >= 2) {
+      const bounds = new kakao.maps.LatLngBounds();
+      pts.forEach(p => bounds.extend(p));
+      map.setBounds(bounds, 60);
+    }
+    toast(`📏 ${m.from}~${m.to}km 구간 포커스`, 'success');
+  } else {
+    const pos = findCoordByKm(m.km);
+    if (pos) { map.setCenter(pos); map.setLevel(5); }
+    toast(`📍 ${m.km}km 포커스`, 'success');
+  }
+}
+
+// 전체 항목이 보이도록 지도 맞춤
+function focusAllAI() {
+  if (!map || !aiCircles.length) return;
+  const bounds = new kakao.maps.LatLngBounds();
+  let cnt = 0;
+  aiCircles.forEach(c => {
+    try {
+      if (c instanceof kakao.maps.Polyline) {
+        c.getPath().forEach(p => { bounds.extend(p); cnt++; });
+      } else if (c instanceof kakao.maps.Circle) {
+        bounds.extend(c.getPosition()); cnt++;
+      }
+    } catch(e){}
+  });
+  if (cnt) map.setBounds(bounds, 80);
+}
+
+// 전체 일괄 표시 (하위 호환)
 function showAllAIResults(ranges, points, severity) {
   ranges.forEach(r => showKmRange(r[0], r[1], severity));
   points.forEach(km => showKmPoint(km, severity));
@@ -888,11 +1028,19 @@ function activateLayerFromAI(label) {
   toast(`${getLDef(label).name} 레이어 추가`, 'info');
 }
 
-function clearAIOverlays() {
+// 오버레이만 제거 (액션바/버튼 유지) - 내부용
+function clearAIOverlaysOnly() {
   aiCircles.forEach(c => { try { c.setMap(null); } catch(e){} });
   aiLabels.forEach(l => { try { l.setMap(null); } catch(e){} });
   aiCircles = []; aiLabels = [];
+  window._aiMentions = null;
+}
+
+// 오버레이 + 액션바 모두 제거 - 버튼/헤더용
+function clearAIOverlays() {
+  clearAIOverlaysOnly();
   document.getElementById('map-action-bar').classList.remove('show');
+  toast('분석 결과 제거', 'info');
 }
 
 // ═══════════════════════════════════════════════════════════
