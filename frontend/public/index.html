@@ -1222,31 +1222,32 @@ function filterAttrTable(q) {
 
 function selectAttrRow(idx, rowEl) {
   attrSelectedIdx = idx;
-  // 행 선택 표시
   document.querySelectorAll('#attr-tbl tbody tr').forEach(tr => tr.classList.remove('selected'));
   rowEl.classList.add('selected');
 
   const f = attrTableFiltered[idx];
   if (!f || !f.geometry) return;
 
-  // 기존 하이라이트 제거 후 새 하이라이트
   clearAttrHighlight();
   highlightFeature(f);
+  showInfo(f.properties, f.geometry.type, false);
 
-  // 지도 이동
+  // 현재 뷰 밖에 있을 때만 패닝 (줌레벨 유지)
   const geom = f.geometry;
+  let targetPos = null;
   if (geom.type === 'Point') {
     const [lng, lat] = geom.coordinates;
-    map.setCenter(new kakao.maps.LatLng(lat, lng));
-    map.setLevel(5);
+    if (isFinite(lat) && isFinite(lng)) targetPos = new kakao.maps.LatLng(lat, lng);
   } else if (geom.type === 'Polygon') {
-    const bounds = new kakao.maps.LatLngBounds();
-    geom.coordinates[0].forEach(([lo, la]) => bounds.extend(new kakao.maps.LatLng(la, lo)));
-    map.setBounds(bounds, 60);
+    const [lo, la] = geom.coordinates[0][0];
+    if (isFinite(la) && isFinite(lo)) targetPos = new kakao.maps.LatLng(la, lo);
   }
-
-  // 정보 팝업도 동시에 갱신
-  showInfo(f.properties, geom.type, false);
+  if (targetPos) {
+    const bounds = map.getBounds();
+    if (!bounds.contain(targetPos)) {
+      map.panTo(targetPos); // 줌 유지, 위치만 이동
+    }
+  }
 }
 
 function highlightFeature(f) {
