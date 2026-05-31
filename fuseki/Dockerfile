@@ -20,7 +20,6 @@ RUN apt-get update && apt-get install -y curl unzip && rm -rf /var/lib/apt/lists
 WORKDIR /data
 
 # --- 적재 입력: 정규화된 데이터 + TBox 2개 + Fuseki 설정 ---
-#   loaded.ttl 은 ingest_normalize.py 로 미리 만든 결과를 레포에 포함시켜 둔다.
 COPY loaded.ttl road-ledger-core.ttl road-ledger-classes.ttl ./
 COPY road-geosparql.ttl ./
 
@@ -28,8 +27,7 @@ COPY road-geosparql.ttl ./
 RUN ${JENA_HOME}/bin/tdb2.tdbloader --loc=/data/databases/road-tdb2 \
       road-ledger-core.ttl road-ledger-classes.ttl loaded.ttl
 
-# Render 가 주입하는 $PORT 로 기동. 첫 기동 시 공간 인덱스 자동 생성.
-# private service 고정 포트 (FUSEKI_URL 과 일치)
-ENV PORT=3030  
+# private service 고정 포트 (FUSEKI_URL 과 일치). 첫 기동 시 공간 인덱스 자동 생성.
+ENV PORT=3030
 EXPOSE 3030
 CMD ["sh","-c","${FUSEKI_HOME}/fuseki-server --port=${PORT} --config=/data/road-geosparql.ttl"]
