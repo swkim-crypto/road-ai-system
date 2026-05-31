@@ -29,6 +29,7 @@ RUN ${JENA_HOME}/bin/tdb2.tdbloader --loc=/data/databases/road-tdb2 \
       road-ledger-core.ttl road-ledger-classes.ttl loaded.ttl
 
 # Render 가 주입하는 $PORT 로 기동. 첫 기동 시 공간 인덱스 자동 생성.
-ENV PORT=3030  # private service 고정 포트 (FUSEKI_URL 과 일치)
+# private service 고정 포트 (FUSEKI_URL 과 일치)
+ENV PORT=3030  
 EXPOSE 3030
 CMD ["sh","-c","${FUSEKI_HOME}/fuseki-server --port=${PORT} --config=/data/road-geosparql.ttl"]
