@@ -1,0 +1,76 @@
+## 도로대장 시설물 분류 TBox — 55종 ↔ 11개 기능 대분류
+## 기하형태(점/선/면)는 적재 시 ingest_normalize.py 가 WKT에서 자동 부여 → 여기엔 없음.
+## 질의는 두 축: 기능분류(아래) + 기하형태(rl:AreaFacility 등).
+
+@prefix ex:   <http://example.org/highway/> .
+@prefix rl:   <http://example.org/road-ledger#> .
+@prefix rdf:  <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+## --- 11개 기능 대분류 (rl:Facility 하위) ---
+rl:RoadStructure a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "도로구조·선형"@ko .
+rl:AncillaryFacility a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "부속·부대시설"@ko .
+rl:SafetyFacility a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "안전시설"@ko .
+rl:SignageMarking a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "표지·노면표시"@ko .
+rl:ITSDevice a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "ITS·전자장비"@ko .
+rl:EarthworkStructure a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "토공·사면·벽체"@ko .
+rl:DrainagePassage a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "배수·통로시설"@ko .
+rl:LandscapeEnvironment a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "조경·환경"@ko .
+rl:UtilityUnderground a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "지하·부대매설"@ko .
+rl:ReferenceMeasurement a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "이정·측정·기준"@ko .
+rl:AdministrativeZone a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "행정·구역·점용"@ko .
+
+## --- 55종 클래스 → 기능 대분류 ---
+ex:Class_001 rdfs:subClassOf rl:RoadStructure ; rdfs:label "주행경로노드"@ko .
+ex:Class_002 rdfs:subClassOf rl:RoadStructure ; rdfs:label "주행경로링크"@ko .
+ex:Class_003 rdfs:subClassOf rl:RoadStructure ; rdfs:label "차도구간(교량)"@ko .
+ex:Class_004 rdfs:subClassOf rl:RoadStructure ; rdfs:label "차도구간(터널)"@ko .
+ex:Class_005 rdfs:subClassOf rl:RoadStructure ; rdfs:label "차도구간(지하차도)"@ko .
+ex:Class_007 rdfs:subClassOf rl:RoadStructure ; rdfs:label "차도구간(IC)"@ko .
+ex:Class_009 rdfs:subClassOf rl:AncillaryFacility ; rdfs:label "부속구간(휴게소)"@ko .
+ex:Class_010 rdfs:subClassOf rl:AncillaryFacility ; rdfs:label "부속구간(졸음쉼터)"@ko .
+ex:Class_015 rdfs:subClassOf rl:AncillaryFacility ; rdfs:label "주차면"@ko .
+ex:Class_016 rdfs:subClassOf rl:RoadStructure ; rdfs:label "종단경사"@ko .
+ex:Class_017 rdfs:subClassOf rl:SignageMarking ; rdfs:label "교통안전표지"@ko .
+ex:Class_018 rdfs:subClassOf rl:SignageMarking ; rdfs:label "노면선표시"@ko .
+ex:Class_019 rdfs:subClassOf rl:SignageMarking ; rdfs:label "노면안내표시"@ko .
+ex:Class_020 rdfs:subClassOf rl:SignageMarking ; rdfs:label "도로안내표지"@ko .
+ex:Class_021 rdfs:subClassOf rl:ITSDevice ; rdfs:label "도로전광표지(VMS)"@ko .
+ex:Class_022 rdfs:subClassOf rl:ReferenceMeasurement ; rdfs:label "이정(거리표)"@ko .
+ex:Class_023 rdfs:subClassOf rl:ReferenceMeasurement ; rdfs:label "이정(갓길이정)"@ko .
+ex:Class_024 rdfs:subClassOf rl:SafetyFacility ; rdfs:label "차량방호안전시설(중앙분리대)"@ko .
+ex:Class_025 rdfs:subClassOf rl:SafetyFacility ; rdfs:label "차량방호안전시설(방호울타리)"@ko .
+ex:Class_026 rdfs:subClassOf rl:SafetyFacility ; rdfs:label "차량방호안전시설(충격흡수)"@ko .
+ex:Class_027 rdfs:subClassOf rl:SafetyFacility ; rdfs:label "과속방지턱"@ko .
+ex:Class_028 rdfs:subClassOf rl:SafetyFacility ; rdfs:label "높이장애물"@ko .
+ex:Class_029 rdfs:subClassOf rl:ITSDevice ; rdfs:label "차로신호제어기(LCS)"@ko .
+ex:Class_030 rdfs:subClassOf rl:SafetyFacility ; rdfs:label "제설시설"@ko .
+ex:Class_031 rdfs:subClassOf rl:EarthworkStructure ; rdfs:label "사면(도로절개면)"@ko .
+ex:Class_032 rdfs:subClassOf rl:EarthworkStructure ; rdfs:label "사면(도로성토면)"@ko .
+ex:Class_033 rdfs:subClassOf rl:EarthworkStructure ; rdfs:label "벽/울타리(석축)"@ko .
+ex:Class_034 rdfs:subClassOf rl:EarthworkStructure ; rdfs:label "벽/울타리(낙석방지시설)"@ko .
+ex:Class_035 rdfs:subClassOf rl:EarthworkStructure ; rdfs:label "벽/울타리(방음시설)"@ko .
+ex:Class_036 rdfs:subClassOf rl:EarthworkStructure ; rdfs:label "벽/울타리(옹벽)"@ko .
+ex:Class_037 rdfs:subClassOf rl:ITSDevice ; rdfs:label "CCTV"@ko .
+ex:Class_038 rdfs:subClassOf rl:AncillaryFacility ; rdfs:label "가로등"@ko .
+ex:Class_039 rdfs:subClassOf rl:AncillaryFacility ; rdfs:label "요금소"@ko .
+ex:Class_040 rdfs:subClassOf rl:ITSDevice ; rdfs:label "차량검지기(VDS)"@ko .
+ex:Class_041 rdfs:subClassOf rl:DrainagePassage ; rdfs:label "통로박스"@ko .
+ex:Class_042 rdfs:subClassOf rl:RoadStructure ; rdfs:label "100m 단위도로면"@ko .
+ex:Class_044 rdfs:subClassOf rl:ITSDevice ; rdfs:label "DSRC"@ko .
+ex:Class_046 rdfs:subClassOf rl:AdministrativeZone ; rdfs:label "도로대장 총괄"@ko .
+ex:Class_047 rdfs:subClassOf rl:RoadStructure ; rdfs:label "도로중심선교점"@ko .
+ex:Class_048 rdfs:subClassOf rl:RoadStructure ; rdfs:label "교차시설"@ko .
+ex:Class_050 rdfs:subClassOf rl:DrainagePassage ; rdfs:label "측구"@ko .
+ex:Class_051 rdfs:subClassOf rl:DrainagePassage ; rdfs:label "배수암거/배수관"@ko .
+ex:Class_052 rdfs:subClassOf rl:LandscapeEnvironment ; rdfs:label "가로수"@ko .
+ex:Class_053 rdfs:subClassOf rl:UtilityUnderground ; rdfs:label "지하매설물"@ko .
+ex:Class_054 rdfs:subClassOf rl:UtilityUnderground ; rdfs:label "공동구"@ko .
+ex:Class_055 rdfs:subClassOf rl:LandscapeEnvironment ; rdfs:label "생태통로"@ko .
+ex:Class_056 rdfs:subClassOf rl:ReferenceMeasurement ; rdfs:label "실연장"@ko .
+ex:Class_057 rdfs:subClassOf rl:AdministrativeZone ; rdfs:label "도로구역"@ko .
+ex:Class_058 rdfs:subClassOf rl:AdministrativeZone ; rdfs:label "유료도로"@ko .
+ex:Class_060 rdfs:subClassOf rl:AdministrativeZone ; rdfs:label "접도구역"@ko .
+ex:Class_061 rdfs:subClassOf rl:AdministrativeZone ; rdfs:label "도로점용(점)"@ko .
+ex:Class_062 rdfs:subClassOf rl:RoadStructure ; rdfs:label "차도부경계"@ko .
+ex:Class_063 rdfs:subClassOf rl:ReferenceMeasurement ; rdfs:label "측정점"@ko .

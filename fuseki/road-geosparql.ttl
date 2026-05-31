@@ -1,0 +1,24 @@
+## Fuseki 어셈블러 (Render 배포용) — 컨테이너 절대경로, CRS84, 읽기전용
+## 데이터는 이미지에 구워져 /data/databases/road-tdb2 에 있음.
+
+@prefix fuseki:    <http://jena.apache.org/fuseki#> .
+@prefix rdf:       <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix tdb2:      <http://jena.apache.org/2016/tdb#> .
+@prefix ja:        <http://jena.hpl.hp.com/2005/11/Assembler#> .
+@prefix geosparql: <http://jena.apache.org/geosparql#> .
+
+<#service> rdf:type fuseki:Service ;
+    fuseki:name "road" ;
+    ## 읽기전용: query/sparql 만 노출 (update·gsp-rw 제외 → 공개 안전)
+    fuseki:endpoint [ fuseki:operation fuseki:query ] ;
+    fuseki:endpoint [ fuseki:operation fuseki:query ; fuseki:name "sparql" ] ;
+    fuseki:dataset <#road_ds> .
+
+<#road_ds> rdf:type geosparql:geosparqlDataset ;
+    geosparql:spatialIndexFile "/data/databases/road-tdb2/spatial.index" ;
+    geosparql:srsUri <http://www.opengis.net/def/crs/OGC/1.3/CRS84> ;
+    geosparql:dataset <#baseDataset> .
+
+<#baseDataset> rdf:type tdb2:DatasetTDB2 ;
+    tdb2:location "/data/databases/road-tdb2" .

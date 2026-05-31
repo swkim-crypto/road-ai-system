@@ -1,0 +1,43 @@
+## 도로대장 핵심 온톨로지 (얇은 TBox)
+## 1단계 최소 버전 — 시설물 분류 + 점/선/면 구분 + 도로구간 소속 관계.
+## 추후 TTA 표준 데이터 모델 / 도로대장 작성지침(2024)에 정렬하며 확장.
+
+@prefix rl:        <http://example.org/road-ledger#> .
+@prefix rdf:       <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
+@prefix rdfs:      <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix owl:       <http://www.w3.org/2002/07/owl#> .
+@prefix xsd:       <http://www.w3.org/2001/XMLSchema#> .
+@prefix geo:       <http://www.opengis.net/ont/geosparql#> .
+
+rl:Facility a rdfs:Class ;
+    rdfs:label "도로 시설물" .
+
+## 기하 형태별 구분 — 질의에서 "면형만", "점형만" 필터링에 사용.
+rl:PointFacility a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "점형 시설물" .
+rl:LineFacility  a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "선형 시설물" .
+rl:AreaFacility  a rdfs:Class ; rdfs:subClassOf rl:Facility ; rdfs:label "면형 시설물" .
+
+## 도로구간 — 시설물이 소속되는 대상 (관계/추론의 축)
+rl:RoadSection a rdfs:Class ; rdfs:label "도로구간" .
+
+## --- 속성 ---
+rl:facilityType a rdf:Property ;
+    rdfs:domain rl:Facility ; rdfs:range xsd:string ;
+    rdfs:label "시설물 종류" .                      # 예: "옹벽" "교량" "CCTV" "가로등"
+
+rl:areaM2 a rdf:Property ;
+    rdfs:domain rl:AreaFacility ; rdfs:range xsd:double ;
+    rdfs:label "면적(㎡, 적재 시 사전계산)" .
+
+rl:onRoadSection a rdf:Property ;
+    rdfs:domain rl:Facility ; rdfs:range rl:RoadSection ;
+    rdfs:label "소속 도로구간" .                    # "이 가로등은 이 도로구간 소속" — 관계 탐색
+
+rl:roadName a rdf:Property ;
+    rdfs:domain rl:RoadSection ; rdfs:range xsd:string ;
+    rdfs:label "노선명" .
+
+## 데이터 품질 플래그 (더러운 데이터 격리용)
+rl:validationStatus a rdf:Property ;
+    rdfs:domain rl:Facility ; rdfs:range xsd:string ;
+    rdfs:label "검증 상태" .                         # 예: "ok" "coord_out_of_kr" "area_anomaly"
