@@ -636,11 +636,17 @@ function liHTML(label) {
 
 function safeId(s) { return s.replace(/[^a-zA-Z0-9가-힣]/g,'_'); }
 
+let _layerBusy = {};
 async function toggleLayer(label) {
+  if (_layerBusy[label]) return;          // 로딩 중 재진입(더블클릭) 차단
   if (layerActive[label]) {
     deactivateLayer(label);
   } else {
-    if (!allFeatures[label]) { toast('레이어 로딩 중...', 'info'); await loadType(label); }
+    if (!allFeatures[label]) {
+      _layerBusy[label] = true;
+      toast('레이어 로딩 중...', 'info');
+      try { await loadType(label); } finally { _layerBusy[label] = false; }
+    }
     activateLayer(label);
   }
   updateActiveCount();
@@ -651,6 +657,8 @@ async function toggleLayer(label) {
 // ═══════════════════════════════════════════════════════════
 function activateLayer(label) {
   if (!map || !allFeatures[label]) return;
+  // 기존에 그린 객체가 있으면 먼저 제거 (재진입 시 고아 객체로 남는 것 방지)
+  (layerObjects[label] || []).forEach(o => { try { o.setMap(null); } catch(e){} });
   const def  = getLDef(label);
   const zoom = map.getLevel();
   const step = sampleStep(allFeatures[label].length, zoom);
