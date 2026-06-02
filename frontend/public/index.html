@@ -408,7 +408,8 @@ const LAYER_DEFS = {
   '제설시설':                     { name:'제설시설',      color:'#7dd3fc', default:false, max:10   },
 };
 const DEF_LAYER = { name:'기타', color:'#64748b', default:false, max:300 };
-const getLDef = l => LAYER_DEFS[l] || DEF_LAYER;
+// 사전에 없는 라벨은 '기타'로 뭉뚱그리지 말고 실제 라벨명을 그대로 노출
+const getLDef = l => LAYER_DEFS[l] || { name: (l && l.trim()) ? l : '(미분류)', color:'#64748b', default:false, max:300 };
 
 function sampleStep(count, zoom) {
   if (count < 300) return 1;
