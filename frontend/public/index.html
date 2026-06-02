@@ -321,6 +321,11 @@ table.attr-tbl td.id-cell{color:var(--t3);}
       <div class="map-action-title">🗺️ AI 결과를 지도에 표시</div>
       <div class="map-action-btns" id="map-action-btns"></div>
     </div>
+    <div class="ref-bar" id="ref-bar" style="display:flex;align-items:center;gap:8px;padding:6px 10px;border-bottom:1px solid var(--border);font-size:11px;">
+      <button id="ref-toggle" onclick="toggleRefMode()" style="padding:3px 9px;border-radius:12px;border:1px solid var(--border);background:var(--card);color:var(--t2);cursor:pointer;white-space:nowrap;font-family:inherit;">📍 기준점 OFF</button>
+      <span id="ref-coord" style="color:var(--t3);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">기준점 모드 꺼짐</span>
+      <span id="ref-clear" onclick="clearRefPoint()" style="display:none;cursor:pointer;color:var(--t3);">✕</span>
+    </div>
     <div class="quick">
       <button class="qbtn" onclick="sq('교량과 터널의 분포 현황과 도로 구조적 특성을 분석해주세요')">🌉 교량/터널</button>
       <button class="qbtn" onclick="sq('VMS와 DSRC 위치를 C-ITS 관점에서 분석해주세요')">📡 C-ITS</button>
@@ -456,7 +461,10 @@ function initMap() {
     resampleLarge(lv);
   });
 
-  kakao.maps.event.addListener(map, 'click', closeInfo);
+  kakao.maps.event.addListener(map, 'click', (e) => {
+    if (refMode && e && e.latLng) setRefPoint(e.latLng);
+    else closeInfo();
+  });
   document.getElementById('zoom-badge').textContent = `줌: ${map.getLevel()}`;
   document.getElementById('s-zoom').textContent = map.getLevel();
 
@@ -1446,6 +1454,39 @@ const SYS = `당신은 한국도로공사 정밀도로지도(HD Map) 전문 AI �
 
 function setCtx(t) { currentCtx=t; document.getElementById('ctx-txt').textContent=t; document.getElementById('ctx-bar').classList.add('show'); }
 function clearCtx() { currentCtx=null; document.getElementById('ctx-bar').classList.remove('show'); }
+
+// ── 기준점(지도 클릭으로 좌표 지정) ──────────────────────────
+let refMode = false, refPoint = null, refMarker = null;
+function toggleRefMode() {
+  refMode = !refMode;
+  const b = document.getElementById('ref-toggle');
+  b.textContent = refMode ? '📍 기준점 ON' : '📍 기준점 OFF';
+  b.style.background = refMode ? 'var(--cyan)' : 'var(--card)';
+  b.style.color      = refMode ? '#06202a' : 'var(--t2)';
+  b.style.borderColor= refMode ? 'var(--cyan)' : 'var(--border)';
+  const c = document.getElementById('ref-coord');
+  if (refMode) {
+    c.textContent = refPoint ? `기준점: ${refPoint[0].toFixed(5)}, ${refPoint[1].toFixed(5)}` : '지도를 클릭해 기준점을 찍으세요';
+    toast('기준점 모드 ON — 지도를 클릭하세요', 'info');
+  } else {
+    c.textContent = '기준점 모드 꺼짐';
+    toast('기준점 모드 OFF', 'info');
+  }
+}
+function setRefPoint(latlng) {
+  refPoint = [latlng.getLng(), latlng.getLat()];
+  if (refMarker) refMarker.setMap(null);
+  refMarker = new kakao.maps.Marker({ map, position: latlng, image: getMarkerImg('#facc15') });
+  document.getElementById('ref-coord').textContent = `기준점: ${refPoint[0].toFixed(5)}, ${refPoint[1].toFixed(5)}`;
+  document.getElementById('ref-clear').style.display = 'inline';
+  toast('기준점 설정됨', 'success');
+}
+function clearRefPoint() {
+  refPoint = null;
+  if (refMarker) { refMarker.setMap(null); refMarker = null; }
+  document.getElementById('ref-coord').textContent = refMode ? '지도를 클릭해 기준점을 찍으세요' : '기준점 모드 꺼짐';
+  document.getElementById('ref-clear').style.display = 'none';
+}
 function sq(t) { send(t); }
 
 // AI가 실행한 SPARQL + 결과 디버그 정보를 접이식으로 표시 (정확도 점검용)
@@ -1482,7 +1523,11 @@ async function send(override) {
   }).join('\n');
 
   const msg = currentCtx ? `[선택 객체: ${currentCtx}]\n\n${txt}` : txt;
+  const refHint = (refMode && refPoint)
+    ? `\n[기준점 좌표(경도 위도): ${refPoint[0]} ${refPoint[1]}] — 사용자가 '기준점'이라 하면 이 좌표를 기준으로(가까운/먼/반경) 분석할 것. 거리 질의 시 이 좌표로 CRS84 POINT 리터럴을 BIND.`
+    : '';
   const sys = SYS
+    + refHint
     + `\n[활성 레이어: ${activeLabels.join(', ')||'없음'}]`
     + (statsStr ? `\n[데이터: ${statsStr}]` : '')
     + (idContext ? `\n[레이어별 ID 샘플:\n${idContext}]` : '');
