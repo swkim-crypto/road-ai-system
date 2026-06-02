@@ -336,7 +336,7 @@ table.attr-tbl td.id-cell{color:var(--t3);}
         <div class="mc">
           <strong>정밀도로지도 AI 분석 시스템</strong>입니다.<br><br>
           도로대장 데이터를 자동으로 로드합니다.<br><br>
-          <strong>기본 표시:</strong> 교량·터널·옹벽·이정(중심)<br><br>
+          <strong>기본 표시:</strong> 교량·터널·지하차도·IC<br><br>
           새 데이터는 📂 버튼으로 업로드하시면 교체됩니다.<br>
           AI 분석 결과의 이정(km)은 <strong>지도에 표시</strong> 버튼으로 반영됩니다.
         </div>
@@ -367,7 +367,7 @@ const LAYER_DEFS = {
   '차도구간(터널)':               { name:'터널',          color:'#8b5cf6', default:true,  max:200  },
   '차도구간(지하차도)':           { name:'지하차도',      color:'#6366f1', default:true,  max:50   },
   '차도구간(IC)':                 { name:'IC',            color:'#a78bfa', default:true,  max:50   },
-  '이정(갓길이정)':               { name:'이정(갓길)',    color:'#10b981', default:true,  max:3000 },
+  '이정(갓길이정)':               { name:'이정(갓길)',    color:'#10b981', default:false, max:3000 },
   // ── 도로 구조 ─────────────────────────────────────────────
   '100m 단위도로면':              { name:'도로면(100m)',  color:'#0e7490', default:false, max:2009 },
   '측정점':                       { name:'측정점',        color:'#06b6d4', default:false, max:2791 },
@@ -426,6 +426,7 @@ let layerObjects = {};       // label → kakao 객체[]
 let layerActive  = {};       // label → bool
 let aiCircles    = [];
 let aiLabels     = [];
+let aiResultObjs = [];       // AI SPARQL 결과로 그린 kakao 객체[]
 let selectedProp = null;
 let chatHistory  = [];
 let currentCtx   = null;
@@ -514,7 +515,7 @@ async function autoLoadData() {
     const summary = Object.entries(dataStats)
       .sort((a,b)=>b[1]-a[1]).slice(0,6)
       .map(([k,v])=>`• ${k}: ${v.toLocaleString()}개`).join('\n');
-    addAI(`📂 **도로대장 데이터 로드 완료** (${total.toLocaleString()}개)\n\n교량·터널·옹벽·이정(중심)이 기본 표시됩니다.\n\n**주요 시설물:**\n${summary}`);
+    addAI(`📂 **도로대장 데이터 로드 완료** (${total.toLocaleString()}개)\n\n교량·터널·지하차도·IC가 기본 표시됩니다.\n\n**주요 시설물:**\n${summary}`);
 
     // 3) 나머지 레이어는 백그라운드로 미리 받아둠 (지도는 이미 떠 있음)
     setTimeout(async () => {
@@ -1152,8 +1153,35 @@ async function activateLayerFromAI(label) {
 function clearAIOverlaysOnly() {
   aiCircles.forEach(c => { try { c.setMap(null); } catch(e){} });
   aiLabels.forEach(l => { try { l.setMap(null); } catch(e){} });
-  aiCircles = []; aiLabels = [];
+  aiResultObjs.forEach(o => { try { o.setMap(null); } catch(e){} });
+  aiCircles = []; aiLabels = []; aiResultObjs = [];
   window._aiMentions = null;
+}
+
+// AI 가 생성한 SPARQL 결과(GeoJSON)를 지도에 표시
+function drawAIResult(geojson) {
+  if (!geojson) return;
+  if (geojson.error) { toast('질의 실패: ' + geojson.error, 'error'); return; }
+  const feats = (geojson.features || []).filter(f => f.geometry);
+  if (!feats.length) { toast('분석 결과: 표시할 위치 없음', 'warn'); return; }
+
+  // 이전 AI 결과 지우고 새로
+  aiResultObjs.forEach(o => { try { o.setMap(null); } catch(e){} });
+  aiResultObjs = [];
+
+  const HL = '#e11d48';  // 강조색(분석 결과 전용)
+  const bounds = new kakao.maps.LatLngBounds();
+  feats.forEach(f => {
+    const obj = renderFeature(f, HL);
+    if (obj) aiResultObjs.push(obj);
+    const g = f.geometry;
+    if (g.type === 'Point')  { const [lo,la]=g.coordinates; if(isFinite(la)&&isFinite(lo)) bounds.extend(new kakao.maps.LatLng(la,lo)); }
+    if (g.type === 'LineString') g.coordinates.forEach(([lo,la]) => bounds.extend(new kakao.maps.LatLng(la,lo)));
+  });
+  try { map.setBounds(bounds, 60); } catch(e) {}
+
+  document.getElementById('map-action-bar').classList.add('show');
+  toast(`분석 결과 ${feats.length}건 표시`, 'success');
 }
 
 // 오버레이 + 액션바 모두 제거 - 버튼/헤더용
@@ -1446,6 +1474,7 @@ async function send(override) {
     addAI(data.content);
     chatHistory.push({ role:'assistant', content:data.content });
     buildMapActions(data.content);
+    if (data.geojson) drawAIResult(data.geojson);   // AI 생성 SPARQL 결과 → 지도
   } catch(e) {
     typing.remove();
     addAI(`⚠️ 오류: ${e.message}`);

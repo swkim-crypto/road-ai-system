@@ -22,6 +22,79 @@ async function sparqlSelect(query) {
   return (await r.json()).results.bindings;
 }
 
+// ── AI → SPARQL 분석 도우미 ───────────────────────────────────────────
+// 시설물 라벨 목록(캐시) — AI 프롬프트에 실제 종류를 넣어 정확한 질의를 쓰게 함.
+let _labelsCache = null;
+async function getLabels() {
+  if (_labelsCache) return _labelsCache;
+  try {
+    const rows = await sparqlSelect(`
+      PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
+      PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+      SELECT DISTINCT ?label WHERE {
+        ?f geo:hasGeometry/geo:asWKT ?w ; rdfs:label ?label .
+      } ORDER BY ?label`);
+    _labelsCache = rows.map(b => b.label.value);
+  } catch (e) { _labelsCache = []; }
+  return _labelsCache;
+}
+
+// AI 에게 주는 SPARQL 작성 규칙 + 우리 스키마 치트시트
+function buildSchemaPrompt(labels) {
+  return `[SPARQL 분석 규칙 — 지도 표시용]
+사용자의 공간/분류 질문에 답할 때, 한국어 답변 뒤에 아래 형식의 SPARQL 한 개를 붙이면
+서버가 그걸 Fuseki(읽기전용)에 실행해 결과를 지도에 표시한다. 규칙을 정확히 지킬 것.
+
+프리픽스:
+  PREFIX geo:      <http://www.opengis.net/ont/geosparql#>
+  PREFIX rdfs:     <http://www.w3.org/2000/01/rdf-schema#>
+  PREFIX rl:       <http://example.org/road-ledger#>
+  PREFIX spatialF: <http://jena.apache.org/function/spatial#>
+  PREFIX uom:      <http://www.opengis.net/def/uom/OGC/1.0/>
+
+핵심 패턴:
+- 시설물 기하: ?f geo:hasGeometry/geo:asWKT ?wkt .   (지도에 그릴 거면 반드시 ?wkt 를 SELECT)
+- 종류 필터: ?f rdfs:label ?label . FILTER(STR(?label) = "CCTV")
+- 거리(미터): spatialF:distance(?w1, ?w2, uom:metre)  ← 반드시 이 함수. geof:distance 는 이 환경에서 빈 값(쓰지 말 것).
+- 최근접 N개: 원점 시설의 ?wkt 를 bind → 거리 계산 → ORDER BY ASC(?dist) LIMIT N. 대상은 점형이 안정적.
+- 기하형태: rl:PointFacility / rl:LineFacility / rl:AreaFacility
+- 기능분류(선택): ?f a/rdfs:subClassOf* rl:SafetyFacility . (집계 땐 COUNT(DISTINCT ?f))
+- 반드시 SELECT 질의만. INSERT/DELETE 등 금지. 반드시 LIMIT(<=300) 포함.
+
+사용 가능한 종류 라벨(정확히 이 문자열로 필터):
+${labels.join(', ')}
+
+출력 형식: 한국어로 짧게 답한 뒤, 지도에 표시할 시설물 결과가 있을 때만 마지막에 정확히 한 개:
+\`\`\`sparql
+SELECT ?f ?label ?wkt WHERE { ... } LIMIT 100
+\`\`\`
+단순 설명/대화면 이 블록을 생략한다. (?dist 등 추가 변수는 결과 속성으로 표시됨)`;
+}
+
+function extractSparql(text) {
+  const m = text.match(/```sparql\s*([\s\S]*?)```/i);
+  return m ? m[1].trim() : null;
+}
+function isReadOnlySparql(q) {
+  return !/\b(INSERT|DELETE|DROP|CLEAR|LOAD|CREATE|ADD|MOVE|COPY)\b/i.test(q);
+}
+// SPARQL 결과 bindings → GeoJSON (?wkt 컬럼을 기하로, 나머지는 속성으로)
+function rowsToGeoJSON(rows) {
+  const features = rows.map(b => {
+    if (!b.wkt) return null;
+    const geometry = wktToGeometry(b.wkt.value);
+    if (!geometry) return null;
+    const properties = {};
+    for (const k in b) {
+      if (k === 'wkt') continue;
+      properties[k] = b[k].value;
+      if (k === 'f') properties.id = b[k].value.split(/[#/]/).pop();
+    }
+    return { type: 'Feature', properties, geometry };
+  }).filter(Boolean);
+  return { type: 'FeatureCollection', features };
+}
+
 // ── 시설물 종류별 개수만 반환 (기하 없음 → 가볍고 메모리 안전). 패널/총계용.
 app.get('/data.stats', async (req, res) => {
   const q = `
@@ -88,12 +161,14 @@ app.get('/', (req, res) => {
 // ── 정적 파일 (data.geojson 라우트는 위에서 이미 처리)
 app.use(express.static(path.join(__dirname, '../frontend/public')));
 
-// ── Claude API 프록시 (변경 없음)
+// ── Claude API 프록시 + AI 생성 SPARQL 실행 → 지도용 GeoJSON
 app.post('/api/chat', async (req, res) => {
   const { messages, system } = req.body;
   if (!process.env.ANTHROPIC_API_KEY)
     return res.status(500).json({ error: 'API Key가 서버에 설정되지 않았습니다.' });
   try {
+    const labels = await getLabels();
+    const fullSystem = (system || '') + '\n\n' + buildSchemaPrompt(labels);
     const response = await fetch('https://api.anthropic.com/v1/messages', {
       method: 'POST',
       headers: {
@@ -104,7 +179,7 @@ app.post('/api/chat', async (req, res) => {
       body: JSON.stringify({
         model: 'claude-sonnet-4-20250514',
         max_tokens: 1500,
-        system: system || '',
+        system: fullSystem,
         messages
       })
     });
@@ -113,7 +188,25 @@ app.post('/api/chat', async (req, res) => {
       return res.status(response.status).json({ error: err.error?.message || '오류' });
     }
     const data = await response.json();
-    res.json({ content: data.content[0]?.text || '' });
+    let content = data.content[0]?.text || '';
+
+    // AI 가 SPARQL 을 붙였으면 실행 → GeoJSON. 실패해도 답변은 그대로 전달.
+    const sparql = extractSparql(content);
+    let geojson = null;
+    if (sparql) {
+      content = content.replace(/```sparql[\s\S]*?```/i, '').trim();
+      if (isReadOnlySparql(sparql)) {
+        try {
+          const rows = await sparqlSelect(sparql);
+          geojson = rowsToGeoJSON(rows);
+        } catch (e) {
+          geojson = { error: e.message };
+        }
+      } else {
+        geojson = { error: '읽기 전용 질의만 허용됩니다.' };
+      }
+    }
+    res.json({ content, geojson, sparql });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
