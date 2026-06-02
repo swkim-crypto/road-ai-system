@@ -22,12 +22,35 @@ async function sparqlSelect(query) {
   return (await r.json()).results.bindings;
 }
 
+// ── 시설물 종류별 개수만 반환 (기하 없음 → 가볍고 메모리 안전). 패널/총계용.
+app.get('/data.stats', async (req, res) => {
+  const q = `
+    PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    SELECT ?label (COUNT(?f) AS ?n) WHERE {
+      ?f geo:hasGeometry/geo:asWKT ?wkt ; rdfs:label ?label .
+    } GROUP BY ?label`;
+  try {
+    const rows = await sparqlSelect(q);
+    const stats = {};
+    rows.forEach(b => { stats[b.label.value] = parseInt(b.n.value, 10); });
+    res.json(stats);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ── 지도 데이터: 정적 GeoJSON 대신 Fuseki 질의 → GeoJSON (좌표 변환 불필요)
-//    ?type=라벨  으로 시설물 종류 필터 (예: /data.geojson?type=CCTV)
+//    반드시 ?type=라벨 으로 종류별 호출 (예: /data.geojson?type=CCTV)
+//    무필터 전체 호출은 22,989건을 한 번에 메모리로 올려 OOM 을 내므로 막는다.
 app.get('/data.geojson', async (req, res) => {
-  const typeFilter = req.query.type
-    ? `?f rdfs:label ?label . FILTER(STR(?label) = ${JSON.stringify(req.query.type)})`
-    : `?f rdfs:label ?label .`;
+  if (!req.query.type) {
+    return res.status(400).json({
+      error: 'type 파라미터가 필요합니다. 종류별로 호출하세요 (예: /data.geojson?type=CCTV). ' +
+             '전체 목록은 /data.stats 에서 확인하세요.'
+    });
+  }
+  const typeFilter = `?f rdfs:label ?label . FILTER(STR(?label) = ${JSON.stringify(req.query.type)})`;
   const q = `
     PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
     PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>

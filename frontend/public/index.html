@@ -466,35 +466,47 @@ function initMap() {
   toast('카카오맵 로드 완료', 'success');
 }
 
+// 시설물 종류 하나를 서버에서 받아 allFeatures 에 채운다 (이미 있으면 건너뜀)
+async function loadType(label) {
+  if (allFeatures[label]) return allFeatures[label];
+  try {
+    const res = await fetch('/data.geojson?type=' + encodeURIComponent(label));
+    const gj  = await res.json();
+    allFeatures[label] = (gj.features || []).filter(f => f.geometry);
+  } catch(e) {
+    allFeatures[label] = [];
+  }
+  return allFeatures[label];
+}
+
 async function autoLoadData() {
   try {
-    showOv('도로 데이터 로딩 중...', 20);
-    const res = await fetch('/data.geojson');
-    const gj  = await res.json();
-    showOv('레이어 분류 중...', 55);
+    showOv('도로 데이터 통계 로딩...', 15);
+    // 1) 가벼운 통계(종류별 개수)부터 — 전체 기하를 받지 않으므로 메모리 안전
+    const stats = await (await fetch('/data.stats')).json();
+    if (stats.error) throw new Error(stats.error);
 
     clearAllLayers();
     allFeatures = {};
-    dataStats = gj.metadata?.stats || {};
+    dataStats = stats;                                   // { label: count }
 
-    gj.features.forEach(f => {
-      const label = f.properties?.label || f.properties?.classId || '기타';
-      if (!allFeatures[label]) allFeatures[label] = [];
-      allFeatures[label].push(f);
-    });
-
-    const total = gj.features.length;
+    const total = Object.values(stats).reduce((a,b)=>a+b, 0);
     document.getElementById('s-total').textContent = total.toLocaleString();
     document.getElementById('lp-sub').textContent = total.toLocaleString() + '개';
 
-    showOv('패널 구성...', 75);
-    buildLayerPanel();
+    showOv('패널 구성...', 30);
+    buildLayerPanel();                                   // dataStats 기반
 
-    showOv('디폴트 레이어 표시...', 88);
-    Object.keys(allFeatures).forEach(label => {
-      if (getLDef(label).default) activateLayer(label);
-    });
+    // 2) 기본 레이어만 종류별로 받아서 즉시 지도에 표시
+    const labels   = Object.keys(stats);
+    const defaults = labels.filter(l => getLDef(l).default);
+    const others   = labels.filter(l => !getLDef(l).default);
 
+    showOv('기본 레이어 로딩...', 50);
+    for (const label of defaults) {
+      await loadType(label);
+      activateLayer(label);
+    }
     fitAll();
     updateActiveCount();
     hideOv();
@@ -503,6 +515,11 @@ async function autoLoadData() {
       .sort((a,b)=>b[1]-a[1]).slice(0,6)
       .map(([k,v])=>`• ${k}: ${v.toLocaleString()}개`).join('\n');
     addAI(`📂 **도로대장 데이터 로드 완료** (${total.toLocaleString()}개)\n\n교량·터널·옹벽·이정(중심)이 기본 표시됩니다.\n\n**주요 시설물:**\n${summary}`);
+
+    // 3) 나머지 레이어는 백그라운드로 미리 받아둠 (지도는 이미 떠 있음)
+    setTimeout(async () => {
+      for (const label of others) await loadType(label);
+    }, 300);
 
   } catch(e) {
     hideOv();
@@ -582,7 +599,7 @@ function loadGeoJSON(input) {
 // 레이어 패널
 // ═══════════════════════════════════════════════════════════
 function buildLayerPanel() {
-  const labels = Object.keys(allFeatures);
+  const labels = Object.keys(dataStats).length ? Object.keys(dataStats) : Object.keys(allFeatures);
   const defs   = labels.filter(l => getLDef(l).default);
   const others = labels.filter(l => !getLDef(l).default);
   let html = '';
@@ -593,7 +610,7 @@ function buildLayerPanel() {
 
 function liHTML(label) {
   const def = getLDef(label);
-  const cnt = (allFeatures[label]||[]).length;
+  const cnt = (dataStats[label] != null) ? dataStats[label] : (allFeatures[label]||[]).length;
   const sid = safeId(label);
   const esc = label.replace(/'/g,"\\'");
   return `<div class="layer-item" id="li_${sid}">
@@ -611,8 +628,13 @@ function liHTML(label) {
 
 function safeId(s) { return s.replace(/[^a-zA-Z0-9가-힣]/g,'_'); }
 
-function toggleLayer(label) {
-  layerActive[label] ? deactivateLayer(label) : activateLayer(label);
+async function toggleLayer(label) {
+  if (layerActive[label]) {
+    deactivateLayer(label);
+  } else {
+    if (!allFeatures[label]) { toast('레이어 로딩 중...', 'info'); await loadType(label); }
+    activateLayer(label);
+  }
   updateActiveCount();
 }
 
@@ -1119,7 +1141,8 @@ function showAllAIResults(ranges, points, severity) {
 // 하위 호환: 기존 showKmCircle 유지
 function showKmCircle(km) { showKmPoint(km, 'default'); }
 
-function activateLayerFromAI(label) {
+async function activateLayerFromAI(label) {
+  if (!allFeatures[label]) await loadType(label);
   activateLayer(label);
   updateActiveCount();
   toast(`${getLDef(label).name} 레이어 추가`, 'info');
@@ -1149,7 +1172,8 @@ let attrHighlight    = null;   // 하이라이트 오버레이
 let attrSelectedIdx  = -1;     // 선택된 행 인덱스
 let _attrAllCols     = [];     // 컬럼 목록 캐시
 
-function openAttrTable(label) {
+async function openAttrTable(label) {
+  if (!allFeatures[label]) { toast('레이어 로딩 중...', 'info'); await loadType(label); }
   const features = allFeatures[label];
   if (!features || !features.length) { toast('데이터 없음', 'warn'); return; }
 
