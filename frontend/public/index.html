@@ -230,15 +230,12 @@ table.attr-tbl td.id-cell{color:var(--t3);}
     <div class="stat"><div class="stat-v" id="s-zoom">-</div><div class="stat-l">줌 레벨</div></div>
   </div>
   <div class="hdr-btns">
-    <button class="btn pri" onclick="triggerUpload()">📂 GeoJSON 업로드</button>
     <button class="btn" onclick="fitAllRoute()" title="전체 노선 0~32km 보기">🛣️ 전체 노선</button>
     <button class="btn" onclick="clearAIOverlays()" title="AI 분석 오버레이만 제거">✕ 분석결과</button>
     <button class="btn danger" onclick="resetAll()">🔄 초기화</button>
     <button class="btn" onclick="exportChat()">📊 내보내기</button>
   </div>
 </div>
-
-<input type="file" id="file-input" accept=".geojson,.json" style="display:none" onchange="loadGeoJSON(this)">
 
 <div class="main">
 
@@ -250,7 +247,7 @@ table.attr-tbl td.id-cell{color:var(--t3);}
     </div>
     <div class="layer-list" id="layer-list">
       <div style="padding:14px 8px;font-size:11px;color:var(--t3);line-height:1.8">
-        GeoJSON 업로드 후<br>레이어가 표시됩니다.
+        데이터 로딩 중...
       </div>
     </div>
   </div>
@@ -260,8 +257,8 @@ table.attr-tbl td.id-cell{color:var(--t3);}
     <div id="map"></div>
 
     <div class="map-ctrl">
-      <button class="mctrl on" id="b-road" onclick="setMapType('ROADMAP')">지도</button>
-      <button class="mctrl" id="b-hybrid" onclick="setMapType('HYBRID')">위성</button>
+      <button class="mctrl" id="b-road" onclick="setMapType('ROADMAP')">지도</button>
+      <button class="mctrl on" id="b-hybrid" onclick="setMapType('HYBRID')">위성</button>
     </div>
 
     <div class="zoom-badge" id="zoom-badge">줌: -</div>
@@ -335,10 +332,10 @@ table.attr-tbl td.id-cell{color:var(--t3);}
         <div class="av">🤖</div>
         <div class="mc">
           <strong>정밀도로지도 AI 분석 시스템</strong>입니다.<br><br>
-          도로대장 데이터를 자동으로 로드합니다.<br><br>
+          도로대장 데이터(온톨로지)를 자동으로 로드합니다.<br><br>
           <strong>기본 표시:</strong> 교량·터널·지하차도·IC<br><br>
-          새 데이터는 📂 버튼으로 업로드하시면 교체됩니다.<br>
-          AI 분석 결과의 이정(km)은 <strong>지도에 표시</strong> 버튼으로 반영됩니다.
+          자연어로 질문하면 AI가 분석해 <strong>결과를 지도에 표시</strong>합니다.<br>
+          예: "CCTV에서 가장 가까운 가로등 5개", "터널 전부 보여줘"
         </div>
       </div>
     </div>
@@ -450,6 +447,7 @@ function initMap() {
   });
   map.addControl(new kakao.maps.ZoomControl(), kakao.maps.ControlPosition.RIGHT);
   map.addControl(new kakao.maps.MapTypeControl(), kakao.maps.ControlPosition.TOPRIGHT);
+  map.setMapTypeId(kakao.maps.MapTypeId.HYBRID);   // 기본: 위성(영상)
 
   kakao.maps.event.addListener(map, 'zoom_changed', () => {
     const lv = map.getLevel();
@@ -782,15 +780,10 @@ function updateActiveCount() {
   document.getElementById('s-active').textContent = cnt.toLocaleString();
 }
 
-function resetAll() {
-  if (!confirm('모든 데이터를 초기화하시겠습니까?')) return;
+async function resetAll() {
+  if (!confirm('지도와 레이어를 초기 상태로 되돌릴까요?')) return;
   clearAllLayers();
-  allFeatures = {}; dataStats = {}; imgCache = {};
-  document.getElementById('layer-list').innerHTML = '<div style="padding:14px 8px;font-size:11px;color:var(--t3);line-height:1.8">GeoJSON 업로드 후<br>레이어가 표시됩니다.</div>';
-  document.getElementById('lp-sub').textContent = '미로드';
-  document.getElementById('s-total').textContent = '0';
-  document.getElementById('s-active').textContent = '0';
-  document.getElementById('map-action-bar').classList.remove('show');
+  await autoLoadData();          // 패널·기본 레이어 재구성 (목록 안 비움)
   toast('초기화 완료', 'info');
 }
 
