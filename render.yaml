@@ -19,7 +19,7 @@ services:
     runtime: node
     plan: starter
     buildCommand: npm install
-    startCommand: node backend/server.js
+    startCommand: node --max-old-space-size=400 backend/server.js
     envVars:
       # ⚠️ Fuseki 가 먼저 배포된 뒤, Render 대시보드의 road-fuseki '내부 주소'를 확인해
       #    아래 값을 맞추세요. (포트는 Fuseki 가 리슨하는 포트. 기본 3030)
