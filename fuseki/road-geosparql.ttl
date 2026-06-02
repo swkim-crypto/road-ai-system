@@ -1,5 +1,14 @@
 ## Fuseki 어셈블러 (Render 배포용) — 컨테이너 절대경로, CRS84, 읽기전용
 ## 데이터는 이미지에 구워져 /data/databases/road-tdb2 에 있음.
+##
+## ★ 512MB 메모리 대응:
+##   부팅 때 메모리를 크게 잡아먹는 두 단계를 끈다.
+##   - geosparql:inference   false → "Applying GeoSPARQL Schema"(RDFS 추론) 생략
+##   - geosparql:indexEnabled false → 공간 인덱스(STRtree) 빌드 생략
+##   지도 표시는 geo:asWKT 좌표 조회만 쓰므로 둘 다 없어도 정상 동작한다.
+##   ▶ 나중에 AI 공간 질의(최근접·반경 등, geof:sfWithin/buffer)를 붙일 때
+##     geosparql:indexEnabled 를 true 로 되돌릴 것. 그때는 메모리가 더 필요할 수
+##     있어 road-fuseki 플랜 상향(예: Standard)을 같이 고려.
 
 @prefix fuseki:    <http://jena.apache.org/fuseki#> .
 @prefix rdf:       <http://www.w3.org/1999/02/22-rdf-syntax-ns#> .
@@ -16,7 +25,9 @@
     fuseki:dataset <#road_ds> .
 
 <#road_ds> rdf:type geosparql:geosparqlDataset ;
-    geosparql:spatialIndexFile "/data/databases/road-tdb2/spatial.index" ;
+    ## 부팅 메모리 절감 — 추론/인덱스 끔 (지도 표시엔 불필요)
+    geosparql:inference    false ;
+    geosparql:indexEnabled false ;
     geosparql:srsUri <http://www.opengis.net/def/crs/OGC/1.3/CRS84> ;
     geosparql:dataset <#baseDataset> .
 
