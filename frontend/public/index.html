@@ -1172,16 +1172,15 @@ function geomFinite(geom) {
 
 // AI 가 생성한 SPARQL 결과(GeoJSON)를 지도에 표시
 function drawAIResult(geojson) {
+  // 새 검색마다 이전 결과 레이어를 먼저 제거 (레이어 고정 방지)
+  aiResultObjs.forEach(o => { try { o.setMap(null); } catch(e){} });
+  aiResultObjs = [];
   if (!geojson) return;
   if (geojson.error) { toast('질의 실패: ' + geojson.error, 'error'); return; }
 
   const all  = geojson.features || [];
   const feats = all.filter(f => geomFinite(f.geometry));
   const dropped = all.length - feats.length;
-
-  // 이전 AI 결과 지우기
-  aiResultObjs.forEach(o => { try { o.setMap(null); } catch(e){} });
-  aiResultObjs = [];
 
   if (!feats.length) {
     toast(dropped ? `결과 ${dropped}건 모두 좌표 이상` : '분석 결과: 표시할 위치 없음', 'warn');
@@ -1506,16 +1505,20 @@ async function send(override) {
     if (!res.ok) { const e=await res.json(); throw new Error(e.error||'서버 오류'); }
     const data = await res.json();
     typing.remove();
-    addAI(data.content);
-    chatHistory.push({ role:'assistant', content:data.content });
-    buildMapActions(data.content);
-    if (data.geojson) drawAIResult(data.geojson);   // AI 생성 SPARQL 결과 → 지도
-    if (data.sparql) showQueryDebug(data.sparql, data.geojson && data.geojson.debug);
+    const reply = (data.content && data.content.trim()) ? data.content : '분석을 완료했습니다.';
+    addAI(reply);
+    chatHistory.push({ role:'assistant', content: reply });   // 빈 메시지 금지
+    try {
+      buildMapActions(reply);
+      if (data.geojson) drawAIResult(data.geojson);
+      if (data.sparql) showQueryDebug(data.sparql, data.geojson && data.geojson.debug);
+    } catch(err) { console.error('결과 표시 오류', err); }
   } catch(e) {
     typing.remove();
     addAI(`⚠️ 오류: ${e.message}`);
+  } finally {
+    document.getElementById('sbtn').disabled = false;
   }
-  document.getElementById('sbtn').disabled = false;
 }
 
 function addUser(t) { append('user',`<div class="av">👤</div><div class="mc">${esc(t).replace(/\n/g,'<br>')}</div>`); }

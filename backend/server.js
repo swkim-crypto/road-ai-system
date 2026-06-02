@@ -212,6 +212,12 @@ app.post('/api/chat', async (req, res) => {
         geojson = { error: '읽기 전용 질의만 허용됩니다.' };
       }
     }
+    // 빈 답변 방지 — 빈 assistant 메시지는 다음 API 호출을 깨뜨림
+    if (!content || !content.trim()) {
+      content = geojson && geojson.features && geojson.features.length
+        ? `요청하신 ${geojson.features.length}건을 지도에 표시했습니다.`
+        : '분석을 완료했습니다.';
+    }
     res.json({ content, geojson, sparql });
   } catch (e) {
     res.status(500).json({ error: e.message });
