@@ -79,11 +79,17 @@ function isReadOnlySparql(q) {
   return !/\b(INSERT|DELETE|DROP|CLEAR|LOAD|CREATE|ADD|MOVE|COPY)\b/i.test(q);
 }
 // SPARQL 결과 bindings → GeoJSON (?wkt 컬럼을 기하로, 나머지는 속성으로)
+function coordsFinite(coords) {
+  if (typeof coords[0] === 'number') return isFinite(coords[0]) && isFinite(coords[1]);
+  return coords.every(coordsFinite);
+}
 function rowsToGeoJSON(rows) {
+  const vars = rows.length ? Object.keys(rows[0]) : [];
+  const sampleWkt = rows.length && rows[0].wkt ? String(rows[0].wkt.value).slice(0, 120) : null;
   const features = rows.map(b => {
     if (!b.wkt) return null;
     const geometry = wktToGeometry(b.wkt.value);
-    if (!geometry) return null;
+    if (!geometry || !geometry.coordinates || !coordsFinite(geometry.coordinates)) return null;
     const properties = {};
     for (const k in b) {
       if (k === 'wkt') continue;
@@ -92,7 +98,7 @@ function rowsToGeoJSON(rows) {
     }
     return { type: 'Feature', properties, geometry };
   }).filter(Boolean);
-  return { type: 'FeatureCollection', features };
+  return { type: 'FeatureCollection', features, debug: { rows: rows.length, drawn: features.length, vars, sampleWkt } };
 }
 
 // ── 시설물 종류별 개수만 반환 (기하 없음 → 가볍고 메모리 안전). 패널/총계용.

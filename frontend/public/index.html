@@ -1158,30 +1158,50 @@ function clearAIOverlaysOnly() {
   window._aiMentions = null;
 }
 
+// 기하의 모든 좌표를 순회 (점/선/면, Multi 포함)
+function eachCoord(coords, cb) {
+  if (typeof coords[0] === 'number') { cb(coords[0], coords[1]); return; }
+  coords.forEach(c => eachCoord(c, cb));
+}
+function geomFinite(geom) {
+  if (!geom || !geom.coordinates) return false;
+  let any = false, ok = true;
+  eachCoord(geom.coordinates, (x, y) => { any = true; if (!isFinite(x) || !isFinite(y)) ok = false; });
+  return any && ok;
+}
+
 // AI 가 생성한 SPARQL 결과(GeoJSON)를 지도에 표시
 function drawAIResult(geojson) {
   if (!geojson) return;
   if (geojson.error) { toast('질의 실패: ' + geojson.error, 'error'); return; }
-  const feats = (geojson.features || []).filter(f => f.geometry);
-  if (!feats.length) { toast('분석 결과: 표시할 위치 없음', 'warn'); return; }
 
-  // 이전 AI 결과 지우고 새로
+  const all  = geojson.features || [];
+  const feats = all.filter(f => geomFinite(f.geometry));
+  const dropped = all.length - feats.length;
+
+  // 이전 AI 결과 지우기
   aiResultObjs.forEach(o => { try { o.setMap(null); } catch(e){} });
   aiResultObjs = [];
 
-  const HL = '#e11d48';  // 강조색(분석 결과 전용)
+  if (!feats.length) {
+    toast(dropped ? `결과 ${dropped}건 모두 좌표 이상` : '분석 결과: 표시할 위치 없음', 'warn');
+    return;
+  }
+
+  const HL = '#e11d48';
   const bounds = new kakao.maps.LatLngBounds();
+  let bcnt = 0;
   feats.forEach(f => {
     const obj = renderFeature(f, HL);
     if (obj) aiResultObjs.push(obj);
-    const g = f.geometry;
-    if (g.type === 'Point')  { const [lo,la]=g.coordinates; if(isFinite(la)&&isFinite(lo)) bounds.extend(new kakao.maps.LatLng(la,lo)); }
-    if (g.type === 'LineString') g.coordinates.forEach(([lo,la]) => bounds.extend(new kakao.maps.LatLng(la,lo)));
+    eachCoord(f.geometry.coordinates, (x, y) => {
+      if (isFinite(x) && isFinite(y)) { bounds.extend(new kakao.maps.LatLng(y, x)); bcnt++; }
+    });
   });
-  try { map.setBounds(bounds, 60); } catch(e) {}
+  if (bcnt) { try { map.setBounds(bounds, 60); } catch(e){} }   // 좌표 있을 때만 (달나라 방지)
 
   document.getElementById('map-action-bar').classList.add('show');
-  toast(`분석 결과 ${feats.length}건 표시`, 'success');
+  toast(`분석 결과 ${feats.length}건 표시` + (dropped ? ` (${dropped}건 좌표 이상 제외)` : ''), 'success');
 }
 
 // 오버레이 + 액션바 모두 제거 - 버튼/헤더용
@@ -1436,6 +1456,21 @@ function setCtx(t) { currentCtx=t; document.getElementById('ctx-txt').textConten
 function clearCtx() { currentCtx=null; document.getElementById('ctx-bar').classList.remove('show'); }
 function sq(t) { send(t); }
 
+// AI가 실행한 SPARQL + 결과 디버그 정보를 접이식으로 표시 (정확도 점검용)
+function showQueryDebug(sparql, debug) {
+  const dbg = debug
+    ? `행 ${debug.rows ?? '?'} · 표시 ${debug.drawn ?? '?'} · 변수 [${(debug.vars||[]).join(', ')}]` +
+      (debug.sampleWkt ? `\n샘플 WKT: ${debug.sampleWkt}` : '') +
+      (debug.error ? `\n오류: ${debug.error}` : '')
+    : '';
+  const html = `<div class="av">🔎</div><div class="mc"><details style="font-size:11px;color:var(--t3)">
+    <summary style="cursor:pointer">AI 질의 보기</summary>
+    <pre style="white-space:pre-wrap;word-break:break-all;margin:6px 0 0;">${esc(sparql)}</pre>
+    ${dbg ? `<pre style="white-space:pre-wrap;word-break:break-all;margin:6px 0 0;color:var(--t2)">${esc(dbg)}</pre>` : ''}
+  </details></div>`;
+  append('assistant', html);
+}
+
 async function send(override) {
   const el = document.getElementById('cinput');
   const txt = override || el.value.trim();
@@ -1475,6 +1510,7 @@ async function send(override) {
     chatHistory.push({ role:'assistant', content:data.content });
     buildMapActions(data.content);
     if (data.geojson) drawAIResult(data.geojson);   // AI 생성 SPARQL 결과 → 지도
+    if (data.sparql) showQueryDebug(data.sparql, data.geojson && data.geojson.debug);
   } catch(e) {
     typing.remove();
     addAI(`⚠️ 오류: ${e.message}`);
