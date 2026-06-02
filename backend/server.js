@@ -56,10 +56,23 @@ function buildSchemaPrompt(labels) {
 - 시설물 기하: ?f geo:hasGeometry/geo:asWKT ?wkt .   (지도에 그릴 거면 반드시 ?wkt 를 SELECT)
 - 종류 필터: ?f rdfs:label ?label . FILTER(STR(?label) = "CCTV")
 - 거리(미터): spatialF:distance(?w1, ?w2, uom:metre)  ← 반드시 이 함수. geof:distance 는 이 환경에서 빈 값(쓰지 말 것).
-- 최근접 N개: 원점 시설의 ?wkt 를 bind → 거리 계산 → ORDER BY ASC(?dist) LIMIT N. 대상은 점형이 안정적.
 - 기하형태: rl:PointFacility / rl:LineFacility / rl:AreaFacility
 - 기능분류(선택): ?f a/rdfs:subClassOf* rl:SafetyFacility . (집계 땐 COUNT(DISTINCT ?f))
 - 반드시 SELECT 질의만. INSERT/DELETE 등 금지. 반드시 LIMIT(<=300) 포함.
+
+[거리·최근접/최원거리 — 단순하게]
+- 기준점을 직접 만들 땐 반드시 CRS84 접두를 붙인다(없으면 거리함수가 빈 값):
+    "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(경도 위도)"^^geo:wktLiteral
+- 가장 가까운 N개: ORDER BY ASC(?dist) LIMIT N.  가장 먼 N개: ORDER BY DESC(?dist) LIMIT N.
+- 절대 금지: MIN/MAX 서브쿼리 + 부동소수점 등호 비교(?dist = ?minDist) — 깨진다. 정렬+LIMIT 로만.
+- 예) 한 기준점에서 가까운 가로등 5개:
+    SELECT ?f ?label ?wkt ?dist WHERE {
+      BIND("<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT(127.5956 34.9407)"^^geo:wktLiteral AS ?o)
+      ?f rdfs:label ?label . FILTER(STR(?label) = "가로등")
+      ?f geo:hasGeometry/geo:asWKT ?wkt .
+      BIND(spatialF:distance(?o, ?wkt, uom:metre) AS ?dist)
+    } ORDER BY ASC(?dist) LIMIT 5
+- 데이터에 없는 기준점(예: 시청)은 좌표를 직접 BIND 하되, 답변에 "추정 좌표"임을 밝힌다.
 
 사용 가능한 종류 라벨(정확히 이 문자열로 필터):
 ${labels.join(', ')}
