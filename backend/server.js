@@ -68,7 +68,20 @@ ${labels.join(', ')}
 \`\`\`sparql
 SELECT ?f ?label ?wkt WHERE { ... } LIMIT 100
 \`\`\`
-단순 설명/대화면 이 블록을 생략한다. (?dist 등 추가 변수는 결과 속성으로 표시됨)`;
+단순 설명/대화면 이 블록을 생략한다. (?dist 등 추가 변수는 결과 속성으로 표시됨)
+
+[크기 순위 질문 — 면적/길이로 정렬]
+"가장 넓은/좁은/큰/작은/긴/짧은 N개" 처럼 크기로 정렬하는 질문은 SPARQL 로 풀 수 없다
+(이 엔진엔 면적·길이 함수가 없음). 대신 sparql 블록 대신 rank 블록 한 개를 쓴다:
+\`\`\`rank
+{"type":"차도구간(교량)","order":"desc","limit":5}
+\`\`\`
+- type: 정확한 종류 라벨(위 목록 중 하나)
+- order: desc=큰 것부터, asc=작은 것부터
+- limit: 개수
+서버가 면형은 면적(㎡), 선형은 길이(m)로 자동 계산해 정렬한다.
+주의: 교량·터널 등 '차도구간'은 선형이므로 면적이 아니라 길이로 비교된다.
+이 경우 답변에 "선형이라 길이 기준으로 정렬했다"고 밝힐 것. (rank 와 sparql 중 하나만 사용)`;
 }
 
 function extractSparql(text) {
@@ -99,6 +112,70 @@ function rowsToGeoJSON(rows) {
     return { type: 'Feature', properties, geometry };
   }).filter(Boolean);
   return { type: 'FeatureCollection', features, debug: { rows: rows.length, drawn: features.length, vars, sampleWkt } };
+}
+
+// ── 크기 순위(면적/길이) — Jena 엔 면적함수가 없어 Node 에서 계산·정렬 ──
+// WGS84 경위도를 위도 기준 로컬 스케일로 대략 미터 환산(순위는 정확, 값은 근사).
+function projF(lat) { const r = lat * Math.PI / 180; return { mx: 111320 * Math.cos(r), my: 110540 }; }
+function ringArea(ring) {
+  const n = ring.length; if (n < 3) return 0;
+  const { mx, my } = projF(ring[0][1]);
+  let s = 0;
+  for (let i = 0; i < n; i++) {
+    const a = ring[i], b = ring[(i + 1) % n];
+    s += (a[0] * mx) * (b[1] * my) - (b[0] * mx) * (a[1] * my);
+  }
+  return Math.abs(s) / 2;
+}
+function lineLen(line) {
+  let d = 0;
+  for (let i = 0; i < line.length - 1; i++) {
+    const a = line[i], b = line[i + 1];
+    const { mx, my } = projF((a[1] + b[1]) / 2);
+    d += Math.hypot((b[0] - a[0]) * mx, (b[1] - a[1]) * my);
+  }
+  return d;
+}
+function geomMetric(g) {
+  if (!g) return null;
+  if (g.type === 'Polygon')        return { value: ringArea(g.coordinates[0]), unit: '㎡', kind: '면적' };
+  if (g.type === 'MultiPolygon')   return { value: g.coordinates.reduce((s,p)=>s+ringArea(p[0]),0), unit: '㎡', kind: '면적' };
+  if (g.type === 'LineString')     return { value: lineLen(g.coordinates), unit: 'm', kind: '길이' };
+  if (g.type === 'MultiLineString')return { value: g.coordinates.reduce((s,l)=>s+lineLen(l),0), unit: 'm', kind: '길이' };
+  return null; // 점형은 크기 순위 불가
+}
+function extractRank(text) {
+  const m = text.match(/```rank\s*([\s\S]*?)```/i);
+  if (!m) return null;
+  try { return JSON.parse(m[1].trim()); } catch (e) { return null; }
+}
+async function rankQuery(rank) {
+  const type  = rank.type;
+  const order = rank.order === 'asc' ? 'asc' : 'desc';
+  const limit = Math.min(parseInt(rank.limit, 10) || 5, 50);
+  const rows = await sparqlSelect(`
+    PREFIX geo:  <http://www.opengis.net/ont/geosparql#>
+    PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+    SELECT ?f ?label ?wkt WHERE {
+      ?f rdfs:label ?label ; geo:hasGeometry/geo:asWKT ?wkt .
+      FILTER(STR(?label) = ${JSON.stringify(type)})
+    } LIMIT 5000`);
+  const items = rows.map(b => {
+    const g = wktToGeometry(b.wkt.value);
+    if (!g || !g.coordinates || !coordsFinite(g.coordinates)) return null;
+    const m = geomMetric(g);
+    if (!m) return null;
+    return { id: b.f.value.split(/[#/]/).pop(), label: b.label?.value || '', g, m };
+  }).filter(Boolean);
+  items.sort((a, b) => order === 'asc' ? a.m.value - b.m.value : b.m.value - a.m.value);
+  const top = items.slice(0, limit);
+  const kind = top[0]?.m.kind || '크기';
+  const features = top.map(f => ({
+    type: 'Feature',
+    properties: { id: f.id, label: f.label, [f.m.kind]: Math.round(f.m.value).toLocaleString() + f.m.unit },
+    geometry: f.g
+  }));
+  return { type: 'FeatureCollection', features, debug: { rows: rows.length, ranked: items.length, drawn: features.length, metric: kind, order } };
 }
 
 // ── 시설물 종류별 개수만 반환 (기하 없음 → 가볍고 메모리 안전). 패널/총계용.
@@ -196,10 +273,17 @@ app.post('/api/chat', async (req, res) => {
     const data = await response.json();
     let content = data.content[0]?.text || '';
 
-    // AI 가 SPARQL 을 붙였으면 실행 → GeoJSON. 실패해도 답변은 그대로 전달.
-    const sparql = extractSparql(content);
+    // 크기 순위(rank) 우선 → 없으면 AI 가 만든 SPARQL 실행. 실패해도 답변은 전달.
+    const rank   = extractRank(content);
+    const sparql = rank ? null : extractSparql(content);
     let geojson = null;
-    if (sparql) {
+    let ranInfo = sparql;
+    if (rank) {
+      content = content.replace(/```rank[\s\S]*?```/i, '').trim();
+      ranInfo = '[RANK] ' + JSON.stringify(rank);
+      try { geojson = await rankQuery(rank); }
+      catch (e) { geojson = { error: e.message }; }
+    } else if (sparql) {
       content = content.replace(/```sparql[\s\S]*?```/i, '').trim();
       if (isReadOnlySparql(sparql)) {
         try {
@@ -218,7 +302,7 @@ app.post('/api/chat', async (req, res) => {
         ? `요청하신 ${geojson.features.length}건을 지도에 표시했습니다.`
         : '분석을 완료했습니다.';
     }
-    res.json({ content, geojson, sparql });
+    res.json({ content, geojson, sparql: ranInfo });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
