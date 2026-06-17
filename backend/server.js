@@ -9,6 +9,8 @@ app.use(express.json({ limit: '200mb' }));
 app.use(cors({ origin: process.env.ALLOWED_ORIGIN || '*' }));
 
 const FUSEKI = process.env.FUSEKI_URL || 'http://localhost:3030/road/sparql';
+// 모델은 환경변수로 — 모델이 바뀌어도 코드 수정 없이 Render 설정만 변경.
+const MODEL  = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
 
 // 저장 WKT 리터럴: "<...CRS84> POINT(lon lat)" → CRS URI 접두만 제거, 좌표는 그대로 WGS84
 function wktToGeometry(wkt) {
@@ -273,7 +275,7 @@ app.post('/api/chat', async (req, res) => {
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: MODEL,
         max_tokens: 1500,
         system: fullSystem,
         messages
